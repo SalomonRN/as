@@ -8,7 +8,7 @@ struct Team
     Team *next;
     string group;
     string countrie;
-    vector<string> headData; // DEJAR FIJO
+    vector<string> headData;
     vector<int> data;
 };
 struct Table
@@ -25,36 +25,6 @@ void mostrar(Team *&head);
 bool read();
 vector<int> goles();
 void simularTodo(Team *&head);
-vector<int> contador(Team *&head);
-
-vector<int> contador(Team *&head)
-{
-    vector<int> result, null;
-    int n = 1, t = 0;
-    Team *current = head;
-    Team *aux = current->next;
-    if (head == NULL)
-    {
-        cout << "NADA QUE CONTAR" << endl;
-        return null;
-    }
-    do
-    {
-        n += 1;
-        current = current->next;
-        aux = aux->next;
-    } while (current->group == aux->group);
-    result.push_back(n);
-    current = head;
-    do
-    {
-        t += 1;
-        current = current->next;
-
-    } while (current != nullptr);
-    result.push_back(t);
-    return result;
-}
 
 vector<string> split(string txt)
 {
@@ -105,7 +75,6 @@ void create(Team *&head, string group, string countrie)
 void mostrar(Team *&head)
 {
     Team *current = head;
-    Team *aux = current->next;
     if (head == NULL)
     {
         cout << "NADA QUE MOSTRAR" << endl;
@@ -113,23 +82,12 @@ void mostrar(Team *&head)
     }
     do
     {
-
         cout << current->group << endl;
-        do
-        {
-            cout << current->countrie << endl;
-            current = current->next;
-            if (aux->next != nullptr)
-            {
-                aux = aux->next;
-            }
-
-        } while (current->group == aux->group && current->next != nullptr);
         cout << current->countrie << endl;
+        cout << endl;
         current = current->next;
-        aux = aux->next;
-
     } while (current != nullptr);
+    cout << "\n";
 }
 bool read()
 {
@@ -161,51 +119,54 @@ void simularTodo(Team *&head)
 {
     Team *current = head;
     vector<int> v;
-    int numeroAleatorio, golesA, golesB, a = 0, j = 0;
-    vector<int> cont = contador(head);
-    cout << "PAISES POR EQUIPOS: " << cont[0] << " TOTAL DE paises: " << cont[1] << endl;
+    int numeroAleatorio, golesA, golesB, a = 0;
     do
     {
         cout << current->group << endl;
-        vector<int> cont = contador(head);
-        for (int i = 0; i < cont[0]; i++)
-        
-        
+        for (int i = 0; i < current->countrie.size(); i++)
         {
-            switch (numeroAleatorio)
+            for (int j = 1; j < current->countrie.size(); j++)
             {
-            case 0:
-                do
+                if (j + a >= current->countrie.size())
                 {
-                    v = goles();
-                } while (v[0] >= v[1]);
-
-                cout << "GOLES: " << current->countrie[i] << ": " << v[0] << "\n"
-                     << current->countrie[j + a] << " : " << v[1] << endl;
-                cout << current->countrie[i] << " PERDIO" << endl;
-                break;
-            case 1:
-
-                do
+                    break;
+                }
+                cout << current->countrie[i] << " vs " << current->countrie[j + a] << endl;
+                numeroAleatorio = rand() % 3;
+                switch (numeroAleatorio)
                 {
-                    v = goles();
-                } while (v[0] <= v[1]);
+                case 0:
+                    do
+                    {
+                        v = goles();
+                    } while (v[0] >= v[1]);
 
-                cout << "GOLES: " << current->countrie[i] << ": " << v[0] << "\n"
-                     << current->countrie[j + a] << " : " << v[1] << endl;
-                cout << current->countrie[i] << " GANÓ" << endl;
-                break;
-            case 2:
-                do
-                {
-                    v = goles();
-                } while (v[0] != v[1]);
+                    cout << "GOLES: " << current->countrie[i] << ": " << v[0] << "\n"
+                         << current->countrie[j + a] << " : " << v[1] << endl;
+                    cout << current->countrie[i] << " PERDIO" << endl;
+                    break;
+                case 1:
 
-                cout << "GOLES: " << current->countrie[i] << ": " << v[0] << "\n"
-                     << current->countrie[j + a] << " : " << v[1] << endl;
-                cout << current->countrie[i] << " Y " << current->countrie[j + a] << " EMPATARON" << endl;
-                break;
+                    do
+                    {
+                        v = goles();
+                    } while (v[0] <= v[1]);
 
+                    cout << "GOLES: " << current->countrie[i] << ": " << v[0] << "\n"
+                         << current->countrie[j + a] << " : " << v[1] << endl;
+                    cout << current->countrie[i] << " GANÓ" << endl;
+                    break;
+                case 2:
+                    do
+                    {
+                        v = goles();
+                    } while (v[0] != v[1]);
+
+                    cout << "GOLES: " << current->countrie[i] << ": " << v[0] << "\n"
+                         << current->countrie[j + a] << " : " << v[1] << endl;
+                    cout << current->countrie[i] << " Y " << current->countrie[j + a] << " EMPATARON" << endl;
+                    break;
+                }
                 cout << "----------------------------------------------------------------------------------------------------------" << endl;
             }
 
@@ -216,7 +177,6 @@ void simularTodo(Team *&head)
         cout << "///////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
     } while (current != nullptr);
 }
-
 int main()
 {
     srand(time(0));
@@ -230,7 +190,8 @@ int main()
         switch (choise)
         {
         case 1:
-            simularTodo(head);
+            mostrar(head);
+            // simularTodo(head);
             break;
 
         default:

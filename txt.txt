@@ -12,5 +12,5 @@ Grupo F
 Marruecos,Croacia,Belgica,Canada
 Grupo G 
 Brasil,Suiza,Camerun,Serbia
-Grupo H: 
+Grupo H 
 Portugal,Republica de Corea,Uruguay,Ghana
