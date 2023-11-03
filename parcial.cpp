@@ -2,60 +2,33 @@
 #include <vector>
 #include <fstream>
 using namespace std;
-
+struct pais
+{
+    pais *next;
+    string nombre;
+    int ganados;
+    int empatados;
+    int perdidos;
+    int goleFavor;
+    int golesContra;
+    int golesDiferencia;
+    // AGREGAR VARIABLES BOOL PARA SABER SI PASARON O NO A LA SIGUIENTE RONDA OCTAVOS TRUE, CUARTOS FALSE
+};
 struct Team
 {
     Team *next;
     string group;
-    string countrie;
-    vector<string> headData; // DEJAR FIJO
-    vector<int> data;
+    vector<string> countries;
+    vector<pais *> pais; // GUARDAMOS LOS APUNTADORE DE CADA PAIS QUE ESTAN EN countries, para así apuntar a su informacion en pais strcuture
 };
+
 struct Table
 {
     Table *next;
     string table;
 };
-
 Team *head = nullptr;
-vector<string> split(string txt);
-void byOne(string countrie, string group);
-void create(Team *&head, string group, string countrie);
-void mostrar(Team *&head);
-bool read();
-vector<int> goles();
-void simularTodo(Team *&head);
-vector<int> contador(Team *&head);
-
-vector<int> contador(Team *&head)
-{
-    vector<int> result, null;
-    int n = 1, t = 0;
-    Team *current = head;
-    Team *aux = current->next;
-    if (head == NULL)
-    {
-        cout << "NADA QUE CONTAR" << endl;
-        return null;
-    }
-    do
-    {
-        n += 1;
-        current = current->next;
-        aux = aux->next;
-    } while (current->group == aux->group);
-    result.push_back(n);
-    current = head;
-    do
-    {
-        t += 1;
-        current = current->next;
-
-    } while (current != nullptr);
-    result.push_back(t);
-    return result;
-}
-
+pais *headP = nullptr;
 vector<string> split(string txt)
 {
     int posInit = 0;
@@ -73,19 +46,12 @@ vector<string> split(string txt)
 
     return results;
 }
-void byOne(string countrie, string group)
+void create(Team *&head, string group, vector<string> countries)
 {
-    vector<string> results = split(countrie);
-    for (int i = 0; i < results.size(); i++)
-    {
-        create(head, group, results[i]);
-    }
-}
-void create(Team *&head, string group, string countrie)
-{
+
     Team *new_node = new Team();
     new_node->group = group;
-    new_node->countrie = countrie;
+    new_node->countries = countries;
     new_node->next = nullptr;
 
     if (head == nullptr)
@@ -102,10 +68,60 @@ void create(Team *&head, string group, string countrie)
         current->next = new_node;
     }
 }
+void createPais(Team *&head)
+{
+    Team *current = head;
+    pais *new_ = new pais();
+    vector<pais *> vP;
+    if (head == NULL)
+    {
+        cout << "NADA QUE HACER" << endl;
+        return;
+    }
+    do
+    {
+        for (string Pais : current->countries)
+        {
+            pais *new_ = new pais();
+            new_->nombre = Pais;
+
+            if (headP == nullptr)
+            {
+
+                headP = new_;
+            }
+            else
+            {
+                pais *currentP = headP;
+                while (currentP->next != nullptr)
+                {
+                    currentP = currentP->next;
+                }
+                currentP->next = new_;
+            }
+
+            vP.push_back(new_);
+
+            current->pais = vP;
+        }
+        vP.clear();
+        current = current->next;
+    } while (current != nullptr);
+}
+void mostrarP(pais *&headP)
+{
+    pais *current = headP;
+    do
+    {
+        cout << "LISTA DOS: ";
+        cout << current->nombre << " " << endl;
+        current = current->next;
+    } while (current != nullptr);
+}
 void mostrar(Team *&head)
 {
     Team *current = head;
-    Team *aux = current->next;
+
     if (head == NULL)
     {
         cout << "NADA QUE MOSTRAR" << endl;
@@ -113,29 +129,23 @@ void mostrar(Team *&head)
     }
     do
     {
-
         cout << current->group << endl;
-        do
+        for (int i = 0; i < current->pais.size(); i++)
         {
-            cout << current->countrie << endl;
-            current = current->next;
-            if (aux->next != nullptr)
-            {
-                aux = aux->next;
-            }
+            cout << current->pais[i]->nombre << endl;
+            cout << "I: " << i << endl;
+        }
 
-        } while (current->group == aux->group && current->next != nullptr);
-        cout << current->countrie << endl;
         current = current->next;
-        aux = aux->next;
-
     } while (current != nullptr);
+
+    cout << "\n";
 }
 bool read()
 {
     ifstream file;
     string group;
-    string countrie;
+    string countries;
     file.open("txt.txt", ios::in);
     if (file.fail())
     {
@@ -145,9 +155,10 @@ bool read()
     while (!file.eof())
     {
         getline(file, group);
-        getline(file, countrie);
-        byOne(countrie, group);
+        getline(file, countries);
+        create(head, group, split(countries));
     }
+    createPais(head);
     return true;
 }
 vector<int> goles()
@@ -161,51 +172,56 @@ void simularTodo(Team *&head)
 {
     Team *current = head;
     vector<int> v;
-    int numeroAleatorio, golesA, golesB, a = 0, j = 0;
-    vector<int> cont = contador(head);
-    cout << "PAISES POR EQUIPOS: " << cont[0] << " TOTAL DE paises: " << cont[1] << endl;
+    int numeroAleatorio, golesA, golesB, a = 0;
     do
     {
         cout << current->group << endl;
-        vector<int> cont = contador(head);
-        for (int i = 0; i < cont[0]; i++)
-        
-        
+        for (int i = 0; i < current->countries.size(); i++)
         {
-            switch (numeroAleatorio)
+            for (int j = 1; j < current->countries.size(); j++)
             {
-            case 0:
-                do
+                if (j + a >= current->countries.size())
                 {
-                    v = goles();
-                } while (v[0] >= v[1]);
-
-                cout << "GOLES: " << current->countrie[i] << ": " << v[0] << "\n"
-                     << current->countrie[j + a] << " : " << v[1] << endl;
-                cout << current->countrie[i] << " PERDIO" << endl;
-                break;
-            case 1:
-
-                do
+                    break;
+                }
+                cout << current->countries[i] << " vs " << current->countries[j + a] << endl;
+                numeroAleatorio = rand() % 3;
+                switch (numeroAleatorio)
                 {
-                    v = goles();
-                } while (v[0] <= v[1]);
+                case 0:
+                    do
+                    {
+                        v = goles();
+                    } while (v[0] >= v[1]);
 
-                cout << "GOLES: " << current->countrie[i] << ": " << v[0] << "\n"
-                     << current->countrie[j + a] << " : " << v[1] << endl;
-                cout << current->countrie[i] << " GANÓ" << endl;
-                break;
-            case 2:
-                do
-                {
-                    v = goles();
-                } while (v[0] != v[1]);
+                    cout << "GOLES: " << current->countries[i] << ": " << v[0] << "\n"
+                         << current->countries[j + a] << " : " << v[1] << endl;
+                    cout << current->countries[i] << " PERDIO" << endl;
+                    // ACTULIZAR INFORMACION
+                    current->pais[i]->nombre
+                    break;
+                case 1:
 
-                cout << "GOLES: " << current->countrie[i] << ": " << v[0] << "\n"
-                     << current->countrie[j + a] << " : " << v[1] << endl;
-                cout << current->countrie[i] << " Y " << current->countrie[j + a] << " EMPATARON" << endl;
-                break;
+                    do
+                    {
+                        v = goles();
+                    } while (v[0] <= v[1]);
 
+                    cout << "GOLES: " << current->countries[i] << ": " << v[0] << "\n"
+                         << current->countries[j + a] << " : " << v[1] << endl;
+                    cout << current->countries[i] << " GANÓ" << endl;
+                    break;
+                case 2:
+                    do
+                    {
+                        v = goles();
+                    } while (v[0] != v[1]);
+
+                    cout << "GOLES: " << current->countries[i] << ": " << v[0] << "\n"
+                         << current->countries[j + a] << " : " << v[1] << endl;
+                    cout << current->countries[i] << " Y " << current->countries[j + a] << " EMPATARON" << endl;
+                    break;
+                }
                 cout << "----------------------------------------------------------------------------------------------------------" << endl;
             }
 
@@ -216,7 +232,34 @@ void simularTodo(Team *&head)
         cout << "///////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
     } while (current != nullptr);
 }
-
+void mostrarTeam()
+{
+    Team *current = head;
+    do
+    {
+        cout << current->group << endl;
+        for (int i = 0; i < current->countries.size(); i++)
+        {
+            cout << current->countries[i] << " ";
+        }
+        cout << endl;
+        current = current->next;
+    } while (current != nullptr);
+}
+void mostrarPunteros()
+{
+    Team *current = head;
+    do
+    {
+        cout << current->group << endl;
+        for (int i = 0; i < current->pais.size(); i++)
+        {
+            cout << current->pais[i]->nombre << endl;
+        }
+        current = current->next;
+        cout << endl;
+    } while (current != nullptr);
+}
 int main()
 {
     srand(time(0));
@@ -230,6 +273,9 @@ int main()
         switch (choise)
         {
         case 1:
+            // mostrar(head);
+            // mostrarP(headP);
+            // mostrarPunteros();
             simularTodo(head);
             break;
 
