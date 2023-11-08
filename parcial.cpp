@@ -16,8 +16,11 @@ struct pais
     int golesContra;
     int golesDiferencia;
     int totalPuntos;
-
-    // AGREGAR VARIABLES BOOL PARA SABER SI PASARON O NO A LA SIGUIENTE RONDA OCTAVOS TRUE, CUARTOS FALSE
+    bool final_ = false;
+    // COLOCAR LOS INT COMO VECTORES Y QUE LAS POSICIONES DEL VECTOR DEPENDE DE QUE TAN LEJOS LLEGÓ EL EQUIPO, ES DECIR:
+    // 0: FASE DE GRUPOS, 1: OCTAVOS, 2: CUARTOS, 3, FINAL O SEMIFINAL
+    // PARA NO GENERAR CONFUCIONES LA VARIABLE 'final_' ES PARA CONFIRMAR SI
+    // LOS EQUIPOS QUE NO PASAN SE LES PONE -1
 };
 struct Team
 {
@@ -29,6 +32,7 @@ struct Team
 };
 Team *head = nullptr;
 pais *headP = nullptr;
+int nClasificados = 2;
 vector<string> split(string txt)
 {
     int posInit = 0;
@@ -52,6 +56,33 @@ int nCaracteres(string str)
     wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
     wstring wstr = converter.from_bytes(str);
     return wstr.size();
+}
+void prueba()
+{
+
+    Team *current = head;
+    vector<int> v;
+    int numeroAleatorio, golesA, golesB, a = 0;
+    do
+    {
+        cout << "----------------------------" << current->group << "----------------------------" << endl;
+        for (int i = 0; i < current->countries.size(); i++)
+        {
+            for (int j = 1; j < current->countries.size(); j++)
+            {
+                if (j + a >= current->countries.size())
+                {
+                    break;
+                }
+                cout << current->pais[i]->nombre << " vs " << current->pais[j + a]->nombre << endl;
+                numeroAleatorio = rand() % 3;
+            }
+
+            a += 1;
+        }
+        current = current->next;
+        a = 0;
+    } while (current != nullptr);
 }
 
 void create(Team *&head, string group, vector<string> countries)
@@ -177,6 +208,52 @@ bool read()
     createPais(head);
     return true;
 }
+vector<pais *> orderByGolesDiferencia(vector<pais *> s)
+{
+    pais *aux;
+    // ORDENAMOS POR METODO BURBUJA
+    for (int i = 0; i < size(s); i++)
+    {
+        for (int j = 0; j < size(s) - 1; j++)
+        {
+            if (s[j]->golesDiferencia < s[j + 1]->golesDiferencia)
+            {
+                aux = s[j];
+                s[j] = s[j + 1];
+                s[j + 1] = aux;
+            }
+        }
+    }
+    // COMPROBAMOS CUANTAS VECES ESTÁ REPETIDO 'golesDiferencia' Y DE AHÍ HACEMOS CAMBIOS
+    int nRepetidas = 0; // Varaible que guarda las veces que se está repitiendo el número mayor de
+    int f = s[0]->golesDiferencia;
+    for (int i = 1; i < s.size(); i++)
+    {
+        if (f == s[i]->golesDiferencia)
+        {
+            nRepetidas += 1;
+        }
+    }
+    // HACERLO CON VECTOR QUE GUARDE n CANTIDAD DE CAMBIOS, QUE REPRESENTARIA LA n CANTIDAD DE CLASIFICADOS
+    if (nRepetidas >= nClasificados)
+    {
+        vector<int> r; // PARA GUARDAR LA n CANTIDAD DE CAMBIOS
+        for (int i = 0; i < nClasificados; i++)
+        {
+            r.push_back(rand() % (nRepetidas + 1));
+        }
+
+        for (int i = 0; i < r.size(); i++)
+        {
+            aux = s[i];
+            s[i] = s[r[i]];
+            s[r[i]] = aux;
+        }
+        return s;
+    }
+
+    return s;
+}
 vector<int> goles()
 {
     vector<int> v;
@@ -188,25 +265,20 @@ void calcularPosicion()
 {
     /**
      * CASOS A TENER EN CUENTA :
-     *          TODOS SON IGUALES EN TOTAL DE PUNTOS
      *          TRES SON IGUALES EN TOTAL DE PUNTOS
      *          DOS SON IGUALES EN TOTAL DE PUNTOS
-     *
-     *          TODOS SON IGUALES EN TOTAL DE GOLES
-     *          TRES SON IGUALES EN TOTAL DE GOLES
-     *          DOS SON IGUALES EN TOTAL DE GOLES
-     *
      */
     Team *current = head;
-    vector<pais *> s;
+    vector<pais *> s; // Vector que guarda los punteros de cada pais en orden de mayor a menor segun sus puntos.
     do
     {
-
+        // DUPLICA EL VECTOR Y LO GUARDA EN s
         for (int i = 0; i < current->pais.size(); i++)
         {
             s.push_back(current->pais[i]);
         }
         pais *aux;
+        // ORDENA EL VECTOR s DE MENOR A MAYOR
         for (int i = 0; i < size(s); i++)
         {
             for (int j = 0; j < size(s) - 1; j++)
@@ -220,9 +292,46 @@ void calcularPosicion()
                 }
             }
         }
+        /*
+                for (int i = 0; i < size(s); i++)
+                {
+                    cout << "NOMBRE: " << s[i]->nombre << endl;
+                    cout << "GOLES: " << s[i]->golesDiferencia << endl;
+                }*/
+
+        //
+        // comprobaciones
+        // SI TODAS LOS PUNTOS SON IGUALES
+        int nRepetidasPts = 0;
+        int f = s[0]->totalPuntos;
+        for (int i = 0; i < nClasificados; i++)
+        {
+            for (int j = 1; j <= nClasificados; j++)
+            {
+                if (s[i]->totalPuntos == s[i + j]->totalPuntos)
+                {
+                    nRepetidasPts += 1;
+                }
+            }
+            cout << "nRepetidasPts ES: " << nRepetidasPts << current->group << "................." << endl;
+            if (nRepetidasPts >= nClasificados)
+            {
+                cout << "PUNTOS SIMILARES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+                s = orderByGolesDiferencia(s);
+            }
+            // current = current->next;
+        }
+        // SI EL PRIMER PUESTO TIENE -2 GOLES, PERO AUN
+        // EN EL CASO QUE TODOS LOS PAISES TENGAN LOS MISMOS PUNTOS
+        if (nRepetidasPts >= nClasificados)
+        {
+            cout << "PUNTOS SIMILARES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+            s = orderByGolesDiferencia(s);
+        }
         current->posicionClasificados = s;
         s.clear();
         current = current->next;
+
     } while (current != nullptr);
 }
 void calcularPuntos()
@@ -235,7 +344,7 @@ void calcularPuntos()
     {
         current->totalPuntos = (current->ganados * 3) + (current->empatados);
         current->totalPartidos = current->ganados + current->perdidos + current->empatados;
-        current->golesDiferencia = current->goleFavor - current->perdidos;
+        current->golesDiferencia = current->goleFavor - current->golesContra;
         current = current->next;
     } while (current != nullptr);
 }
@@ -314,6 +423,25 @@ void simularTodo(Team *&head)
     } while (current != nullptr);
     calcularPuntos();
 }
+void cuartosF()
+{
+    vector<pais *> grupoCuartos;
+    Team *current = head;
+    do
+    {
+        for (int i = 0; i < nClasificados; i++)
+        {
+            grupoCuartos.push_back(current->posicionClasificados[i]);
+        }
+        cout << "CLASIFICADOS: " << endl;
+        for (int i = 0; i < nClasificados; i++)
+        {
+            cout << grupoCuartos[i]->nombre << endl;
+        }
+        current = current->next;
+    } while (current != nullptr);
+}
+
 void mostrarTeam()
 {
     Team *current = head;
@@ -345,47 +473,48 @@ void mostrarPunteros()
 void mostrarTabla()
 {
     Team *current = head;
+    current->posicionClasificados[1]->nombre;
     do
     {
 
         cout << "----------------------------------" << current->group << "----------------------------------" << endl;
         //       10               18                 10   4   4   4      10    5     5    5
         cout << "| Puesto  | Equipo           | Jugados | G | E | P | Puntos | GF | GC | GD |" << endl;
-        for (int i = 0; i < current->pais.size(); i++)
+        for (int i = 0; i < current->posicionClasificados.size(); i++)
         {
-            cout << "|    " << 1 << "    |" << current->pais[i]->nombre;
+            cout << "|    " << i + 1 << "    |" << current->posicionClasificados[i]->nombre;
             //              12
-            for (int j = nCaracteres(current->pais[i]->nombre); j < 18; j++)
+            for (int j = nCaracteres(current->posicionClasificados[i]->nombre); j < 18; j++)
             {
                 cout << " ";
             }
-            cout << "|    " << current->pais[i]->totalPartidos << "    | " << current->pais[i]->ganados << " | " << current->pais[i]->empatados << " | " << current->pais[i]->perdidos << " |   " << current->pais[i]->totalPuntos << "    |";
+            cout << "|    " << current->posicionClasificados[i]->totalPartidos << "    | " << current->posicionClasificados[i]->ganados << " | " << current->posicionClasificados[i]->empatados << " | " << current->posicionClasificados[i]->perdidos << " |   " << current->posicionClasificados[i]->totalPuntos << "    |";
             // 3
-            if (current->pais[i]->goleFavor >= 10)
+            if (current->posicionClasificados[i]->goleFavor >= 10)
             {
-                cout << " " << current->pais[i]->goleFavor << " |";
+                cout << " " << current->posicionClasificados[i]->goleFavor << " |";
             }
             else
             {
-                cout << " " << current->pais[i]->goleFavor << "  |";
+                cout << " " << current->posicionClasificados[i]->goleFavor << "  |";
             }
 
-            if (current->pais[i]->golesContra >= 10)
+            if (current->posicionClasificados[i]->golesContra >= 10)
             {
-                cout << " " << current->pais[i]->golesContra << " |";
+                cout << " " << current->posicionClasificados[i]->golesContra << " |";
             }
             else
             {
-                cout << " " << current->pais[i]->golesContra << "  |";
+                cout << " " << current->posicionClasificados[i]->golesContra << "  |";
             }
 
-            if (current->pais[i]->golesDiferencia >= 10)
+            if (current->posicionClasificados[i]->golesDiferencia >= 10)
             {
-                cout << " " << current->pais[i]->golesDiferencia << " |" << endl;
+                cout << " " << current->posicionClasificados[i]->golesDiferencia << " |" << endl;
             }
             else
             {
-                cout << " " << current->pais[i]->golesDiferencia << "  |" << endl;
+                cout << " " << current->posicionClasificados[i]->golesDiferencia << "  |" << endl;
             }
         }
         current = current->next;
@@ -422,9 +551,12 @@ int main()
             // mostrarPunteros();
             simularTodo(head);
             // mostrarP(headP);
-            mostrarTabla();
             calcularPosicion();
-            clasi();
+            mostrarTabla();
+
+            cuartosF();
+
+            // clasi();
             break;
 
         default:
