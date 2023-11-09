@@ -8,15 +8,20 @@ struct pais
 {
     pais *next;
     string nombre;
-    int ganados;
-    int empatados;
-    int perdidos;
-    int totalPartidos;
-    int goleFavor;
-    int golesContra;
-    int golesDiferencia;
-    int totalPuntos;
-    bool final_ = false;
+    vector<int> ganados;
+    vector<int> empatados;
+    vector<int> perdidos;
+    vector<int> totalPartidos;
+    vector<int> goleFavor;
+    vector<int> golesContra;
+    vector<int> golesDiferencia;
+    vector<int> totalPuntos;
+    // LAS VARIABLES BOOL SE USAN PARA SABER SI CLASIFICÓ EN ESA FASE O NO
+    bool octavosClas = false;
+    bool cuartosClas = false;
+    bool semifinalClas = false;
+    bool winner = false;
+    bool winnerT = false;
     // COLOCAR LOS INT COMO VECTORES Y QUE LAS POSICIONES DEL VECTOR DEPENDE DE QUE TAN LEJOS LLEGÓ EL EQUIPO, ES DECIR:
     // 0: FASE DE GRUPOS, 1: OCTAVOS, 2: CUARTOS, 3, FINAL O SEMIFINAL
     // PARA NO GENERAR CONFUCIONES LA VARIABLE 'final_' ES PARA CONFIRMAR SI
@@ -30,9 +35,79 @@ struct Team
     vector<string> countries;
     vector<pais *> pais; // GUARDAMOS LOS APUNTADORE DE CADA PAIS QUE ESTAN EN countries, para así apuntar a su informacion en pais strcuture
 };
+struct octavosF
+{
+    octavosF *next;
+    int grupo; // GRUPO 1, GRUPO 2 Y ASI
+    vector<pais *> clasificados;
+};
+struct cuartosF
+{
+    cuartosF *next;
+    int grupo; // GRUPO 1, GRUPO 2 Y ASI
+    vector<pais *> clasificados;
+};
+struct semifinal_
+{
+    semifinal_ *next;
+    int grupo; // GRUPO 1, GRUPO 2 Y ASI
+    vector<pais *> clasificados;
+};
+struct finalP
+{
+    finalP *next;
+    vector<pais *> clasificados;
+};
+// VARIABLES GLOBALES
+int nClasificados = 2;
 Team *head = nullptr;
 pais *headP = nullptr;
-int nClasificados = 2;
+octavosF *headO = nullptr;
+cuartosF *headC = nullptr;
+semifinal_ *headSF = nullptr;
+finalP *headFP = nullptr;
+// DEFINO LAS FUNCIONES
+void iniciar(int num);
+vector<string> split(string txt);
+void prueba();
+int nCaracteres(string str);
+vector<int> goles();
+bool read();
+void create(Team *&head, string group, vector<string> countries);
+void createPais(Team *&head);
+void simularTodo(Team *&head);
+void calcularPuntos();
+void calcularPosicion();
+vector<pais *> orderByGolesDiferencia(vector<pais *> s);
+void octavos();
+void cuartos();
+void semifinal();
+void mostrarP(pais *&headP);
+void mostrar(Team *&head);
+void mostrarTeam();
+void mostrarPunteros();
+void mostrarTabla();
+void clasi();
+void menu();
+
+// FUNCIONES QUE USO UNA VEZ O VARIAS, PERO NO TAN IMPORTANTES
+void iniciar()
+{
+
+    pais *current = headP;
+    do
+    {
+        current->ganados.push_back(0);
+        current->empatados.push_back(0);
+        current->perdidos.push_back(0);
+        current->totalPartidos.push_back(0);
+        current->goleFavor.push_back(0);
+        current->golesContra.push_back(0);
+        current->golesDiferencia.push_back(0);
+        current->totalPuntos.push_back(0);
+        current = current->next;
+    } while (current != nullptr);
+}
 vector<string> split(string txt)
 {
     int posInit = 0;
@@ -49,13 +124,6 @@ vector<string> split(string txt)
     }
 
     return results;
-}
-int nCaracteres(string str)
-{
-    // Convertir la cadena a wide string
-    wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
-    wstring wstr = converter.from_bytes(str);
-    return wstr.size();
 }
 void prueba()
 {
@@ -84,7 +152,42 @@ void prueba()
         a = 0;
     } while (current != nullptr);
 }
+int nCaracteres(string str)
+{
+    // Convertir la cadena a wide string
+    wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+    wstring wstr = converter.from_bytes(str);
+    return wstr.size();
+}
+vector<int> goles()
+{
+    vector<int> v;
+    v.push_back(rand() % 7);
+    v.push_back(rand() % 7);
+    return v;
+}
+bool read()
+{
+    ifstream file;
+    string group;
+    string countries;
+    file.open("txt.txt", ios::in);
+    if (file.fail())
+    {
+        return false;
+    }
 
+    while (!file.eof())
+    {
+        getline(file, group);
+        getline(file, countries);
+        create(head, group, split(countries));
+    }
+    createPais(head);
+    iniciar();
+    return true;
+}
+// SECION DE CREACION DE NODOS
 void create(Team *&head, string group, vector<string> countries)
 {
 
@@ -147,119 +250,183 @@ void createPais(Team *&head)
         current = current->next;
     } while (current != nullptr);
 }
-void mostrarP(pais *&headP)
+void createOctavos(int grupo, vector<pais *> countries)
 {
-    cout << endl;
-    pais *current = headP;
-    cout << "INFORMACION DE LOS PARTIDOS: " << endl;
-    do
+    octavosF *new_node = new octavosF();
+    new_node->grupo = grupo;
+    new_node->clasificados = countries;
+    new_node->next = nullptr;
+
+    if (headO == nullptr)
     {
-        cout << current->nombre << " " << endl;
-        cout << "GANADOS: " << current->ganados << " " << endl;
-        cout << "PERDIDOS: " << current->perdidos << " " << endl;
-        cout << "EMPATADOS: " << current->empatados << " " << endl;
-        cout << "GOLES A FAVOR: " << current->goleFavor << " " << endl;
-        cout << "GOLES EN CONTRA: " << current->golesContra << " " << endl;
-        cout << "TOTAL DE PUNTOS : " << current->totalPuntos << " " << endl;
-        current = current->next;
-        cout << endl;
-    } while (current != nullptr);
+        headO = new_node;
+    }
+    else
+    {
+        octavosF *current = headO;
+        while (current->next != nullptr)
+        {
+            current = current->next;
+        }
+        current->next = new_node;
+    }
 }
-void mostrar(Team *&head)
+void createCuartos(int grupo, vector<pais *> countries)
+{
+    cuartosF *new_node = new cuartosF();
+    new_node->grupo = grupo;
+    new_node->clasificados = countries;
+    new_node->next = nullptr;
+
+    if (headC == nullptr)
+    {
+        headC = new_node;
+    }
+    else
+    {
+        cuartosF *current = headC;
+        while (current->next != nullptr)
+        {
+            current = current->next;
+        }
+        current->next = new_node;
+    }
+}
+void createSemifinal(int grupo, vector<pais *> countries)
+{
+    semifinal_ *new_node = new semifinal_();
+    new_node->grupo = grupo;
+    new_node->clasificados = countries;
+    new_node->next = nullptr;
+
+    if (headSF == nullptr)
+    {
+        headSF = new_node;
+    }
+    else
+    {
+        semifinal_ *current = headSF;
+        while (current->next != nullptr)
+        {
+            current = current->next;
+        }
+        current->next = new_node;
+    }
+}
+void createFinal(vector<pais *> countries)
+{
+    finalP *new_node = new finalP();
+    new_node->clasificados = countries;
+    new_node->next = nullptr;
+
+    if (headFP == nullptr)
+    {
+        headFP = new_node;
+    }
+    else
+    {
+        finalP *current = headFP;
+        while (current->next != nullptr)
+        {
+            current = current->next;
+        }
+        current->next = new_node;
+    }
+}
+// SECCION DONDE CALCULA TODO DE MANERA ALEATORIA
+void simularTodo(Team *&head)
 {
     Team *current = head;
-
-    if (head == NULL)
-    {
-        cout << "NADA QUE MOSTRAR" << endl;
-        return;
-    }
+    vector<int> v;
+    int numeroAleatorio, golesA, golesB, a = 0;
     do
     {
-        cout << current->group << endl;
-        for (int i = 0; i < current->pais.size(); i++)
+        // cout << "----------------------------" << current->group << "----------------------------" << endl;
+        for (int i = 0; i < current->countries.size(); i++)
         {
-            cout << current->pais[i]->nombre << endl;
-            cout << "I: " << i << endl;
-        }
+            for (int j = 1; j < current->countries.size(); j++)
+            {
+                if (j + a >= current->countries.size())
+                {
+                    break;
+                }
+                // cout << current->pais[i]->nombre << " vs " << current->pais[j + a]->nombre << endl;
+                numeroAleatorio = rand() % 3;
+                switch (numeroAleatorio)
+                {
+                case 0:
+                    do
+                    {
+                        v = goles();
+                    } while (v[0] >= v[1]);
+                    /*
+                    cout << "GOLES: \n"
+                         << current->pais[i]->nombre << ": " << v[0] << "\n"
+                         << current->pais[j + a]->nombre << " : " << v[1] << endl;
+                    cout << current->pais[i]->nombre << " PERDIO" << endl;
+                    */
+                    // ACTULIZAR INFORMACION
+                    current->pais[i]->perdidos[0] += 1;
+                    current->pais[j + a]->ganados[0] += 1;
+                    break;
+                case 1:
 
+                    do
+                    {
+                        v = goles();
+                    } while (v[0] <= v[1]);
+                    /*
+                    cout << "GOLES: \n"
+                         << current->pais[i]->nombre << ": " << v[0] << "\n"
+                         << current->pais[j + a]->nombre << " : " << v[1] << endl;
+                    cout << current->pais[i]->nombre << " GANÓ" << endl;
+                    */
+                    //
+                    current->pais[i]->ganados[0] += 1;
+                    current->pais[j + a]->perdidos[0] += 1;
+                    break;
+                case 2:
+                    do
+                    {
+                        v = goles();
+                    } while (v[0] != v[1]);
+                    /*
+                    cout << "GOLES: \n"
+                         << current->pais[i]->nombre << ": " << v[0] << "\n"
+                         << current->pais[j + a]->nombre << " : " << v[1] << endl;
+                    cout << current->pais[i]->nombre << " Y " << current->pais[j + a]->nombre << " EMPATARON" << endl;
+                    */
+                    current->pais[i]->empatados[0] += 1;
+                    current->pais[j + a]->empatados[0] += 1;
+                    break;
+                }
+                current->pais[i]->goleFavor[0] += v[0];
+                current->pais[i]->golesContra[0] += v[1];
+                current->pais[j + a]->golesContra[0] += v[0];
+                current->pais[j + a]->goleFavor[0] += v[1];
+            }
+
+            a += 1;
+        }
+        current = current->next;
+        a = 0;
+    } while (current != nullptr);
+    calcularPuntos();
+    calcularPosicion();
+}
+void calcularPuntos()
+{
+    // GANADOS = 3pts
+    // EMPATADOS = 1pts
+    // PERDIDOS = 0pts
+    pais *current = headP;
+    do
+    {
+        current->totalPuntos[0] = (current->ganados[0] * 3) + (current->empatados[0]);
+        current->totalPartidos[0] = current->ganados[0] + current->perdidos[0] + current->empatados[0];
+        current->golesDiferencia[0] = current->goleFavor[0] - current->golesContra[0];
         current = current->next;
     } while (current != nullptr);
-
-    cout << "\n";
-}
-bool read()
-{
-    ifstream file;
-    string group;
-    string countries;
-    file.open("txt.txt", ios::in);
-    if (file.fail())
-    {
-        return false;
-    }
-
-    while (!file.eof())
-    {
-        getline(file, group);
-        getline(file, countries);
-        create(head, group, split(countries));
-    }
-    createPais(head);
-    return true;
-}
-vector<pais *> orderByGolesDiferencia(vector<pais *> s)
-{
-    pais *aux;
-    // ORDENAMOS POR METODO BURBUJA
-    for (int i = 0; i < size(s); i++)
-    {
-        for (int j = 0; j < size(s) - 1; j++)
-        {
-            if (s[j]->golesDiferencia < s[j + 1]->golesDiferencia)
-            {
-                aux = s[j];
-                s[j] = s[j + 1];
-                s[j + 1] = aux;
-            }
-        }
-    }
-    // COMPROBAMOS CUANTAS VECES ESTÁ REPETIDO 'golesDiferencia' Y DE AHÍ HACEMOS CAMBIOS
-    int nRepetidas = 0; // Varaible que guarda las veces que se está repitiendo el número mayor de
-    int f = s[0]->golesDiferencia;
-    for (int i = 1; i < s.size(); i++)
-    {
-        if (f == s[i]->golesDiferencia)
-        {
-            nRepetidas += 1;
-        }
-    }
-    // HACERLO CON VECTOR QUE GUARDE n CANTIDAD DE CAMBIOS, QUE REPRESENTARIA LA n CANTIDAD DE CLASIFICADOS
-    if (nRepetidas >= nClasificados)
-    {
-        vector<int> r; // PARA GUARDAR LA n CANTIDAD DE CAMBIOS
-        for (int i = 0; i < nClasificados; i++)
-        {
-            r.push_back(rand() % (nRepetidas + 1));
-        }
-
-        for (int i = 0; i < r.size(); i++)
-        {
-            aux = s[i];
-            s[i] = s[r[i]];
-            s[r[i]] = aux;
-        }
-        return s;
-    }
-
-    return s;
-}
-vector<int> goles()
-{
-    vector<int> v;
-    v.push_back(rand() % 7);
-    v.push_back(rand() % 7);
-    return v;
 }
 void calcularPosicion()
 {
@@ -303,7 +470,7 @@ void calcularPosicion()
         // comprobaciones
         // SI TODAS LOS PUNTOS SON IGUALES
         int nRepetidasPts = 0;
-        int f = s[0]->totalPuntos;
+        int f = s[0]->totalPuntos[0];
         for (int i = 0; i < nClasificados; i++)
         {
             for (int j = 1; j <= nClasificados; j++)
@@ -313,10 +480,10 @@ void calcularPosicion()
                     nRepetidasPts += 1;
                 }
             }
-            cout << "nRepetidasPts ES: " << nRepetidasPts << current->group << "................." << endl;
+            // cout << "nRepetidasPts ES: " << nRepetidasPts << current->group << "................." << endl;
             if (nRepetidasPts >= nClasificados)
             {
-                cout << "PUNTOS SIMILARES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+                // cout << "PUNTOS SIMILARES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
                 s = orderByGolesDiferencia(s);
             }
             // current = current->next;
@@ -325,7 +492,7 @@ void calcularPosicion()
         // EN EL CASO QUE TODOS LOS PAISES TENGAN LOS MISMOS PUNTOS
         if (nRepetidasPts >= nClasificados)
         {
-            cout << "PUNTOS SIMILARES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+            // cout << "PUNTOS SIMILARES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
             s = orderByGolesDiferencia(s);
         }
         current->posicionClasificados = s;
@@ -334,114 +501,427 @@ void calcularPosicion()
 
     } while (current != nullptr);
 }
-void calcularPuntos()
+vector<pais *> orderByGolesDiferencia(vector<pais *> s)
 {
-    // GANADOS = 3pts
-    // EMPATADOS = 1pts
-    // PERDIDOS = 0pts
-    pais *current = headP;
-    do
+    pais *aux;
+    // ORDENAMOS POR METODO BURBUJA
+    for (int i = 0; i < size(s); i++)
     {
-        current->totalPuntos = (current->ganados * 3) + (current->empatados);
-        current->totalPartidos = current->ganados + current->perdidos + current->empatados;
-        current->golesDiferencia = current->goleFavor - current->golesContra;
-        current = current->next;
-    } while (current != nullptr);
-}
-void simularTodo(Team *&head)
-{
-    Team *current = head;
-    vector<int> v;
-    int numeroAleatorio, golesA, golesB, a = 0;
-    do
-    {
-        cout << "----------------------------" << current->group << "----------------------------" << endl;
-        for (int i = 0; i < current->countries.size(); i++)
+        for (int j = 0; j < size(s) - 1; j++)
         {
-            for (int j = 1; j < current->countries.size(); j++)
+            if (s[j]->golesDiferencia < s[j + 1]->golesDiferencia)
             {
-                if (j + a >= current->countries.size())
-                {
-                    break;
-                }
-                cout << current->pais[i]->nombre << " vs " << current->pais[j + a]->nombre << endl;
-                numeroAleatorio = rand() % 3;
-                switch (numeroAleatorio)
-                {
-                case 0:
-                    do
-                    {
-                        v = goles();
-                    } while (v[0] >= v[1]);
-                    cout << "GOLES: \n"
-                         << current->pais[i]->nombre << ": " << v[0] << "\n"
-                         << current->pais[j + a]->nombre << " : " << v[1] << endl;
-                    cout << current->pais[i]->nombre << " PERDIO" << endl;
-                    // ACTULIZAR INFORMACION
-                    current->pais[i]->perdidos += 1;
-                    current->pais[j + a]->ganados += 1;
-                    break;
-                case 1:
-
-                    do
-                    {
-                        v = goles();
-                    } while (v[0] <= v[1]);
-                    cout << "GOLES: \n"
-                         << current->pais[i]->nombre << ": " << v[0] << "\n"
-                         << current->pais[j + a]->nombre << " : " << v[1] << endl;
-                    cout << current->pais[i]->nombre << " GANÓ" << endl;
-                    current->pais[i]->ganados += 1;
-                    current->pais[j + a]->perdidos += 1;
-                    break;
-                case 2:
-                    do
-                    {
-                        v = goles();
-                    } while (v[0] != v[1]);
-                    cout << "GOLES: \n"
-                         << current->pais[i]->nombre << ": " << v[0] << "\n"
-                         << current->pais[j + a]->nombre << " : " << v[1] << endl;
-                    cout << current->pais[i]->nombre << " Y " << current->pais[j + a]->nombre << " EMPATARON" << endl;
-                    current->pais[i]->empatados += 1;
-                    current->pais[j + a]->empatados += 1;
-                    break;
-                }
-                current->pais[i]->goleFavor += v[0];
-                current->pais[i]->golesContra += v[1];
-                current->pais[j + a]->golesContra += v[0];
-                current->pais[j + a]->goleFavor += v[1];
-
-                cout << "----------------------------------------------------------------------------------------------------------" << endl;
+                aux = s[j];
+                s[j] = s[j + 1];
+                s[j + 1] = aux;
             }
-
-            a += 1;
         }
-        current = current->next;
-        a = 0;
-        cout << "///////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
-    } while (current != nullptr);
-    calcularPuntos();
+    }
+    // COMPROBAMOS CUANTAS VECES ESTÁ REPETIDO 'golesDiferencia' Y DE AHÍ HACEMOS CAMBIOS
+    int nRepetidas = 0; // Varaible que guarda las veces que se está repitiendo el número mayor de
+    int f = s[0]->golesDiferencia[0];
+    for (int i = 1; i < s.size(); i++)
+    {
+        if (f == s[i]->golesDiferencia[0])
+        {
+            nRepetidas += 1;
+        }
+    }
+    // HACERLO CON VECTOR QUE GUARDE n CANTIDAD DE CAMBIOS, QUE REPRESENTARIA LA n CANTIDAD DE CLASIFICADOS
+    if (nRepetidas >= nClasificados)
+    {
+        vector<int> r; // PARA GUARDAR LA n CANTIDAD DE CAMBIOS
+        for (int i = 0; i < nClasificados; i++)
+        {
+            r.push_back(rand() % (nRepetidas + 1));
+        }
+
+        for (int i = 0; i < r.size(); i++)
+        {
+            aux = s[i];
+            s[i] = s[r[i]];
+            s[r[i]] = aux;
+        }
+        return s;
+    }
+
+    return s;
 }
-void cuartosF()
+void octavos()
 {
-    vector<pais *> grupoCuartos;
-    Team *current = head;
+    vector<pais *> paisesOctavos;
+    vector<pais *> aux_paisesOctavos;
+    Team *currentT = head;
+    Team *aux = currentT->next;
+    int num = 1, numeroAleatorio, a = 0;
     do
     {
-        for (int i = 0; i < nClasificados; i++)
+        aux = currentT->next;
+        for (int i = 0; i < nClasificados; i = i + 2)
         {
-            grupoCuartos.push_back(current->posicionClasificados[i]);
+            paisesOctavos.push_back(currentT->posicionClasificados[i]);
+            paisesOctavos.push_back(aux->posicionClasificados[i]);
+            //
+            aux_paisesOctavos.push_back(currentT->posicionClasificados[i + 1]);
+            aux_paisesOctavos.push_back(aux->posicionClasificados[i + 1]);
         }
-        cout << "CLASIFICADOS: " << endl;
-        for (int i = 0; i < nClasificados; i++)
+        currentT = currentT->next->next;
+        createOctavos(num, paisesOctavos);
+        createOctavos(num + 1, aux_paisesOctavos);
+        num += 2;
+        paisesOctavos.clear();
+        aux_paisesOctavos.clear();
+    } while (currentT != nullptr);
+    // CALCULAR Y ASÍ
+    octavosF *current = headO;
+    vector<int> v;
+    do
+    {
+        /*
+        cout << "----------------- GRUPO: " << current->grupo << "----------------------------" << endl;
+        cout << current->clasificados[0]->nombre << " vs " << current->clasificados[1]->nombre << endl;
+        */
+        numeroAleatorio = rand() % 2;
+        switch (numeroAleatorio)
         {
-            cout << grupoCuartos[i]->nombre << endl;
+        case 0:
+            do
+            {
+                v = goles();
+            } while (v[0] >= v[1]);
+            /*
+            cout << "GOLES: \n"
+                 << current->clasificados[0]->nombre << ": " << v[0] << "\n"
+                 << current->clasificados[1]->nombre << " : " << v[1] << endl;
+            cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+            */
+
+            // ACTULIZAR INFORMACION
+            current->clasificados[1]->octavosClas = true;
+            break;
+        case 1:
+
+            do
+            {
+                v = goles();
+            } while (v[0] <= v[1]);
+            /*
+            cout << "GOLES: \n"
+                 << current->clasificados[0]->nombre << ": " << v[0] << "\n"
+                 << current->clasificados[1]->nombre << " : " << v[1] << endl;
+            cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+            */
+            //
+            current->clasificados[0]->octavosClas = true;
+            break;
         }
+        current->clasificados[0]->goleFavor.push_back(v[0]);
+        current->clasificados[1]->goleFavor.push_back(v[1]);
         current = current->next;
     } while (current != nullptr);
 }
+void cuartos()
+{
+    vector<pais *> paisesCuartos;
+    octavosF *currentT = headO;
+    int num = 1, numeroAleatorio, a = 0;
+    do
+    {
+        for (int i = 0; i < currentT->clasificados.size(); i++)
+        {
+            if (currentT->clasificados[i]->octavosClas == true)
+            {
+                paisesCuartos.push_back(currentT->clasificados[i]);
+            }
+        }
+        currentT = currentT->next;
+        for (int i = 0; i < currentT->clasificados.size(); i++)
+        {
+            if (currentT->clasificados[i]->octavosClas == true)
+            {
+                paisesCuartos.push_back(currentT->clasificados[i]);
+            }
+        }
+        createCuartos(num, paisesCuartos);
+        num += 1;
+        paisesCuartos.clear();
+        currentT = currentT->next;
+    } while (currentT != nullptr);
+    cuartosF *current = headC;
+    vector<int> v;
+    do
+    {
+        /*
+        cout << "---------------------------- GRUPO: " << current->grupo << "----------------------------" << endl;
+        cout << current->clasificados[0]->nombre << " vs " << current->clasificados[1]->nombre << endl;
+        */
+        numeroAleatorio = rand() % 2;
+        switch (numeroAleatorio)
+        {
+        case 0:
+            do
+            {
+                v = goles();
+            } while (v[0] >= v[1]);
+            /*
+            cout << "GOLES: \n"
+                 << current->clasificados[0]->nombre << ": " << v[0] << "\n"
+                 << current->clasificados[1]->nombre << " : " << v[1] << endl;
+            cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+            */
+            // ACTULIZAR INFORMACION
+            current->clasificados[1]->cuartosClas = true;
+            break;
+        case 1:
 
+            do
+            {
+                v = goles();
+            } while (v[0] <= v[1]);
+            /*
+            cout << "GOLES: \n"
+                 << current->clasificados[0]->nombre << ": " << v[0] << "\n"
+                 << current->clasificados[1]->nombre << " : " << v[1] << endl;
+            cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+            */
+            //
+            current->clasificados[0]->cuartosClas = true;
+            break;
+        }
+        current->clasificados[0]->goleFavor.push_back(v[0]);
+        current->clasificados[1]->goleFavor.push_back(v[1]);
+        current = current->next;
+        // cout << "///////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
+    } while (current != nullptr);
+}
+void semifinal()
+{
+    vector<pais *> paisesSemifinal;
+    cuartosF *currentT = headC;
+    int num = 1, numeroAleatorio, a = 0;
+    do
+    {
+        for (int i = 0; i < currentT->clasificados.size(); i++)
+        {
+            if (currentT->clasificados[i]->cuartosClas == true)
+            {
+                paisesSemifinal.push_back(currentT->clasificados[i]);
+            }
+        }
+        currentT = currentT->next;
+        for (int i = 0; i < currentT->clasificados.size(); i++)
+        {
+            if (currentT->clasificados[i]->cuartosClas == true)
+            {
+                paisesSemifinal.push_back(currentT->clasificados[i]);
+            }
+        }
+        createSemifinal(num, paisesSemifinal);
+        num += 1;
+        paisesSemifinal.clear();
+        currentT = currentT->next;
+    } while (currentT != nullptr);
+    semifinal_ *current = headSF;
+    vector<int> v;
+    do
+    {
+        /*
+        cout "---------------------------- GRUPO: " << current->grupo << "----------------------------" << endl;
+        cout << current->clasificados[0]->nombre << " vs " << current->clasificados[1]->nombre << endl;
+        */
+        numeroAleatorio = rand() % 2;
+        switch (numeroAleatorio)
+        {
+        case 0:
+            do
+            {
+                v = goles();
+            } while (v[0] >= v[1]);
+            /*
+            cout << "GOLES: \n"
+                 << current->clasificados[0]->nombre << ": " << v[0] << "\n"
+                 << current->clasificados[1]->nombre << " : " << v[1] << endl;
+            cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+            */
+            // ACTULIZAR INFORMACION
+            current->clasificados[1]->semifinalClas = true;
+            break;
+        case 1:
+
+            do
+            {
+                v = goles();
+            } while (v[0] <= v[1]);
+            /*
+            cout << "GOLES: \n"
+                 << current->clasificados[0]->nombre << ": " << v[0] << "\n"
+                 << current->clasificados[1]->nombre << " : " << v[1] << endl;
+            cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+            */
+            //
+            current->clasificados[0]->semifinalClas = true;
+            break;
+        }
+        current->clasificados[0]->goleFavor.push_back(v[0]);
+        current->clasificados[1]->goleFavor.push_back(v[1]);
+        current = current->next;
+        // cout << "///////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
+    } while (current != nullptr);
+}
+void partidoFinal()
+{
+    vector<pais *> paisesFinal;
+    semifinal_ *currentT = headSF;
+    int numeroAleatorio, a = 0;
+    do
+    {
+        for (int i = 0; i < currentT->clasificados.size(); i++)
+        {
+            if (currentT->clasificados[i]->semifinalClas == true)
+            {
+                paisesFinal.push_back(currentT->clasificados[i]);
+            }
+        }
+        currentT = currentT->next;
+    } while (currentT != nullptr);
+    createFinal(paisesFinal);
+    finalP *current = headFP;
+    vector<int> v;
+    // cout << current->clasificados[0]->nombre << " vs " << current->clasificados[1]->nombre << endl;
+    numeroAleatorio = rand() % 2;
+    switch (numeroAleatorio)
+    {
+    case 0:
+        do
+        {
+            v = goles();
+        } while (v[0] >= v[1]);
+        /*
+        cout << "GOLES: \n"
+             << current->clasificados[0]->nombre << ": " << v[0] << "\n"
+             << current->clasificados[1]->nombre << " : " << v[1] << endl;
+        cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+        */
+        // ACTULIZAR INFORMACION
+        current->clasificados[1]->winner = true;
+        break;
+    case 1:
+
+        do
+        {
+            v = goles();
+        } while (v[0] <= v[1]);
+        /*
+        cout << "GOLES: \n"
+             << current->clasificados[0]->nombre << ": " << v[0] << "\n"
+             << current->clasificados[1]->nombre << " : " << v[1] << endl;
+        cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+        */
+        // ACTULIZAR INFORMACION
+        current->clasificados[0]->winner = true;
+        break;
+    }
+    current->clasificados[0]->goleFavor.push_back(v[0]);
+    current->clasificados[1]->goleFavor.push_back(v[1]);
+    // cout << "///////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
+}
+void tercerPuesto()
+{
+    vector<pais *> paisesFinal;
+    semifinal_ *current = headSF;
+    int numeroAleatorio, a = 0;
+    vector<int> v;
+    do
+    {
+        for (int i = 0; i < current->clasificados.size(); i++)
+        {
+            if (current->clasificados[i]->semifinalClas == false)
+            {
+                paisesFinal.push_back(current->clasificados[i]);
+            }
+        }
+        current = current->next;
+    } while (current != nullptr);
+    // cout << current->clasificados[0]->nombre << " vs " << current->clasificados[1]->nombre << endl;
+    numeroAleatorio = rand() % 2;
+    current = headSF;
+    switch (numeroAleatorio)
+    {
+    case 0:
+        do
+        {
+            v = goles();
+        } while (v[0] >= v[1]);
+        /*
+        cout << "GOLES: \n"
+             << current->clasificados[0]->nombre << ": " << v[0] << "\n"
+             << current->clasificados[1]->nombre << " : " << v[1] << endl;
+        cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+        */
+        // ACTULIZAR INFORMACION
+        paisesFinal[1]->winnerT = true;
+        break;
+    case 1:
+
+        do
+        {
+            v = goles();
+        } while (v[0] <= v[1]);
+        /*
+        cout << "GOLES: \n"
+             << current->clasificados[0]->nombre << ": " << v[0] << "\n"
+             << current->clasificados[1]->nombre << " : " << v[1] << endl;
+        cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+        */
+        // ACTULIZAR INFORMACION
+        paisesFinal[0]->winnerT = true;
+        break;
+    }
+    paisesFinal[0]->goleFavor.push_back(v[0]);
+    paisesFinal[1]->goleFavor.push_back(v[1]);
+}
+// MOSTRAR ALGO
+void mostrarP(pais *&headP)
+{
+    cout << endl;
+    pais *current = headP;
+    cout << "INFORMACION DE LOS PARTIDOS: " << endl;
+    do
+    {
+        cout << current->nombre << " " << endl;
+        cout << "GANADOS: " << current->ganados[0] << " " << endl;
+        cout << "PERDIDOS: " << current->perdidos[0] << " " << endl;
+        cout << "EMPATADOS: " << current->empatados[0] << " " << endl;
+        cout << "GOLES A FAVOR: " << current->goleFavor[0] << " " << endl;
+        cout << "GOLES EN CONTRA: " << current->golesContra[0] << " " << endl;
+        cout << "TOTAL DE PUNTOS : " << current->totalPuntos[0] << " " << endl;
+        current = current->next;
+        cout << endl;
+    } while (current != nullptr);
+}
+void mostrar(Team *&head)
+{
+    Team *current = head;
+
+    if (head == NULL)
+    {
+        cout << "NADA QUE MOSTRAR" << endl;
+        return;
+    }
+    do
+    {
+        cout << current->group << endl;
+        for (int i = 0; i < current->pais.size(); i++)
+        {
+            cout << current->pais[i]->nombre << endl;
+            cout << "I: " << i << endl;
+        }
+
+        current = current->next;
+    } while (current != nullptr);
+
+    cout << "\n";
+}
 void mostrarTeam()
 {
     Team *current = head;
@@ -456,24 +936,9 @@ void mostrarTeam()
         current = current->next;
     } while (current != nullptr);
 }
-void mostrarPunteros()
-{
-    Team *current = head;
-    do
-    {
-        cout << current->group << endl;
-        for (int i = 0; i < current->pais.size(); i++)
-        {
-            cout << current->pais[i]->nombre << endl;
-        }
-        current = current->next;
-        cout << endl;
-    } while (current != nullptr);
-}
 void mostrarTabla()
 {
     Team *current = head;
-    current->posicionClasificados[1]->nombre;
     do
     {
 
@@ -488,33 +953,33 @@ void mostrarTabla()
             {
                 cout << " ";
             }
-            cout << "|    " << current->posicionClasificados[i]->totalPartidos << "    | " << current->posicionClasificados[i]->ganados << " | " << current->posicionClasificados[i]->empatados << " | " << current->posicionClasificados[i]->perdidos << " |   " << current->posicionClasificados[i]->totalPuntos << "    |";
+            cout << "|    " << current->posicionClasificados[i]->totalPartidos[0] << "    | " << current->posicionClasificados[i]->ganados[0] << " | " << current->posicionClasificados[i]->empatados[0] << " | " << current->posicionClasificados[i]->perdidos[0] << " |   " << current->posicionClasificados[i]->totalPuntos[0] << "    |";
             // 3
-            if (current->posicionClasificados[i]->goleFavor >= 10)
+            if (current->posicionClasificados[i]->goleFavor[0] >= 10)
             {
-                cout << " " << current->posicionClasificados[i]->goleFavor << " |";
+                cout << " " << current->posicionClasificados[i]->goleFavor[0] << " |";
             }
             else
             {
-                cout << " " << current->posicionClasificados[i]->goleFavor << "  |";
+                cout << " " << current->posicionClasificados[i]->goleFavor[0] << "  |";
             }
 
-            if (current->posicionClasificados[i]->golesContra >= 10)
+            if (current->posicionClasificados[i]->golesContra[0] >= 10)
             {
-                cout << " " << current->posicionClasificados[i]->golesContra << " |";
+                cout << " " << current->posicionClasificados[i]->golesContra[0] << " |";
             }
             else
             {
-                cout << " " << current->posicionClasificados[i]->golesContra << "  |";
+                cout << " " << current->posicionClasificados[i]->golesContra[0] << "  |";
             }
 
-            if (current->posicionClasificados[i]->golesDiferencia >= 10)
+            if (current->posicionClasificados[i]->golesDiferencia[0] >= 10)
             {
-                cout << " " << current->posicionClasificados[i]->golesDiferencia << " |" << endl;
+                cout << " " << current->posicionClasificados[i]->golesDiferencia[0] << " |" << endl;
             }
             else
             {
-                cout << " " << current->posicionClasificados[i]->golesDiferencia << "  |" << endl;
+                cout << " " << current->posicionClasificados[i]->golesDiferencia[0] << "  |" << endl;
             }
         }
         current = current->next;
@@ -533,30 +998,145 @@ void clasi()
         current = current->next;
     } while (current != nullptr);
 }
-int main()
+void mostrarOctavos()
 {
-    srand(time(0));
+    octavosF *current = headO;
+    if (head == NULL)
+    {
+        cout << "NADA QUE MOSTRAR" << endl;
+        return;
+    }
+    do
+    {
+        cout << "----------------------------- Grupo " << current->grupo << endl;
+        for (int i = 0; i < current->clasificados.size(); i++)
+        {
+            cout << " *" << current->clasificados[i]->nombre << endl;
+            cout << "Goles que hizo: " << current->clasificados[i]->goleFavor[1] << endl;
+            string clasi = current->clasificados[i]->octavosClas ? "PASÓ" : "NO PASÓ";
+            cout << "Pasó octavos: " << clasi << endl;
+        }
+
+        current = current->next;
+    } while (current != nullptr);
+}
+void mostrarCuartos()
+{
+    cuartosF *current = headC;
+    if (head == NULL)
+    {
+        cout << "NADA QUE MOSTRAR" << endl;
+        return;
+    }
+    do
+    {
+        cout << "----------------------------- Grupo " << current->grupo << " en cuartos" << endl;
+        for (int i = 0; i < current->clasificados.size(); i++)
+        {
+            cout << current->clasificados[i]->nombre << endl;
+            cout << "Goles que hizo: " << current->clasificados[i]->goleFavor[2] << endl;
+            string clasi = current->clasificados[i]->cuartosClas ? "PASÓ" : "NO PASÓ";
+            cout << "Pasó cuartos: " << clasi << endl;
+        }
+        current = current->next;
+    } while (current != nullptr);
+}
+void mostrarSemiFinal()
+{
+    semifinal_ *current = headSF;
+    if (head == NULL)
+    {
+        cout << "NADA QUE MOSTRAR" << endl;
+        return;
+    }
+    do
+    {
+        cout << "----------------------------- Grupo " << current->grupo << " en la SemiFinal" << endl;
+        for (int i = 0; i < current->clasificados.size(); i++)
+        {
+            cout << current->clasificados[i]->nombre << endl;
+            cout << "Goles que hizo: " << current->clasificados[i]->goleFavor[3] << endl;
+            string clasi = current->clasificados[i]->semifinalClas ? "PASÓ" : "NO PASÓ";
+            cout << "Pasó semifinales: " << clasi << endl;
+        }
+        current = current->next;
+    } while (current != nullptr);
+}
+void mostrarFinal()
+{
+    finalP *current = headFP;
+    if (headFP == NULL)
+    {
+        cout << "NADA QUE MOSTRAR" << endl;
+        return;
+    }
+    do
+    {
+        for (int i = 0; i < current->clasificados.size(); i++)
+        {
+            cout << current->clasificados[i]->nombre << endl;
+            cout << "Goles que hizo: " << current->clasificados[i]->goleFavor[4] << endl;
+            string clasi = current->clasificados[i]->winner ? "GANÓ" : "NO GANÓ";
+            cout << clasi << " LA FINAL" << endl;
+        }
+        current = current->next;
+    } while (current != nullptr);
+}
+void mostrarTercerpuesto()
+{
+    semifinal_ *current = headSF;
+    if (head == NULL)
+    {
+        cout << "NADA QUE MOSTRAR" << endl;
+        return;
+    }
+    do
+    {
+        for (int i = 0; i < current->clasificados.size(); i++)
+        {
+            if (current->clasificados[i]->semifinalClas == false)
+            {
+                cout << current->clasificados[i]->nombre << endl;
+                cout << "Goles que hizo: " << current->clasificados[i]->goleFavor[4] << endl;
+                string clasi = current->clasificados[i]->winnerT ? "GANÓ" : "NO GANÓ";
+                cout << clasi << " EL TERCER PUESTO" << endl;
+            }
+        }
+
+        current = current->next;
+    } while (current != nullptr);
+}
+//
+void menu()
+{
     if (read())
     {
-        int choise = 1;
+        int choise;
         cout << "OPCIONES: " << endl;
         cout << "1: Simular todos los partidos, desde fase de grupos hasta la final (TODO POR PROBABILIDAD)." << endl;
-        // cin >> choise;
+        cout << "Opcion: ";
+        cin >> choise;
 
         switch (choise)
         {
         case 1:
-            // mostrar(head);
-            // mostrarP(headP);
-            // mostrarPunteros();
             simularTodo(head);
-            // mostrarP(headP);
-            calcularPosicion();
             mostrarTabla();
-
-            cuartosF();
-
-            // clasi();
+            cout << "------------------------------- OCTAVOS DE FINAL -------------------------------" << endl;
+            octavos();
+            mostrarOctavos();
+            cout << "------------------------------- CUARTOS DE FINAL -------------------------------" << endl;
+            cuartos();
+            mostrarCuartos();
+            cout << "------------------------------- SEMI-FINAL -------------------------------" << endl;
+            semifinal();
+            mostrarSemiFinal();
+            cout << "------------------------------- FINAL -------------------------------" << endl;
+            partidoFinal();
+            mostrarFinal();
+            cout << "------------------------------- TERCER PUESTO -------------------------------" << endl;
+            tercerPuesto();
+            mostrarTercerpuesto();
             break;
 
         default:
@@ -568,6 +1148,10 @@ int main()
     {
         cout << "ERROR AL LEER EL ARCHIVO TXT CON LOS GRUPOS. \n"
              << "REVISE EL MANUAL DE USUARIO.";
-        return 0;
     }
+}
+int main()
+{
+    srand(time(0));
+    menu();
 }
