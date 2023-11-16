@@ -58,6 +58,12 @@ struct finalP
     finalP *next;
     vector<pais *> clasificados;
 };
+struct Estadio
+{
+    Estadio *next;
+    string nombre;
+};
+
 // VARIABLES GLOBALES
 int nClasificados = 2;
 Team *head = nullptr;
@@ -66,7 +72,9 @@ octavosF *headO = nullptr;
 cuartosF *headC = nullptr;
 semifinal_ *headSF = nullptr;
 finalP *headFP = nullptr;
+Estadio *headEstadio = nullptr;
 // DEFINO LAS FUNCIONES
+void createEstadio(string nombreEstadio);
 void iniciar(int num);
 vector<string> split(string txt);
 void prueba();
@@ -75,7 +83,6 @@ vector<int> goles();
 bool read();
 void create(Team *&head, string group, vector<string> countries);
 void createPais(Team *&head);
-void simularTodo(Team *&head);
 void calcularPuntos();
 void calcularPosicion();
 vector<pais *> orderByGolesDiferencia(vector<pais *> s);
@@ -184,6 +191,18 @@ bool read()
         create(head, group, split(countries));
     }
     createPais(head);
+    file.close();
+    file.open("estadios.txt", ios::in);
+    string nombreEstadio;
+    if (file.fail())
+    {
+        return false;
+    }
+    while (!file.eof())
+    {
+        getline(file, nombreEstadio);
+        createEstadio(nombreEstadio);
+    }
     iniciar();
     return true;
 }
@@ -249,6 +268,29 @@ void createPais(Team *&head)
         vP.clear();
         current = current->next;
     } while (current != nullptr);
+}
+void createEstadio(string nombreEstadio)
+{
+    Estadio *new_node = new Estadio();
+    new_node->nombre = nombreEstadio;
+    new_node->next = nullptr;
+
+    if (headEstadio == nullptr)
+    {
+        cout << "SIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII" << endl;
+        headEstadio = new_node;
+        headEstadio->next = headEstadio;
+    }
+    else
+    {
+        Estadio *current = headEstadio;
+        while (current->next != headEstadio)
+        {
+            current = current->next;
+        }
+        current->next = new_node;
+        new_node->next = headEstadio;
+    }
 }
 void createOctavos(int grupo, vector<pais *> countries)
 {
@@ -334,14 +376,14 @@ void createFinal(vector<pais *> countries)
     }
 }
 // SECCION DONDE CALCULA TODO DE MANERA ALEATORIA
-void simularTodo(Team *&head)
+void faseGrupos(Team *&head)
 {
     Team *current = head;
     vector<int> v;
     int numeroAleatorio, golesA, golesB, a = 0;
     do
     {
-        // cout << "----------------------------" << current->group << "----------------------------" << endl;
+        cout << "----------------------------" << current->group << "----------------------------" << endl;
         for (int i = 0; i < current->countries.size(); i++)
         {
             for (int j = 1; j < current->countries.size(); j++)
@@ -350,7 +392,9 @@ void simularTodo(Team *&head)
                 {
                     break;
                 }
-                // cout << current->pais[i]->nombre << " vs " << current->pais[j + a]->nombre << endl;
+                cout << current->pais[i]->nombre << " vs " << current->pais[j + a]->nombre << endl;
+                cout << "PARTIDO JUGADO EN EL " << headEstadio->nombre << endl;
+                headEstadio = headEstadio->next;
                 numeroAleatorio = rand() % 3;
                 switch (numeroAleatorio)
                 {
@@ -359,12 +403,12 @@ void simularTodo(Team *&head)
                     {
                         v = goles();
                     } while (v[0] >= v[1]);
-                    /*
+
                     cout << "GOLES: \n"
                          << current->pais[i]->nombre << ": " << v[0] << "\n"
                          << current->pais[j + a]->nombre << " : " << v[1] << endl;
                     cout << current->pais[i]->nombre << " PERDIO" << endl;
-                    */
+
                     // ACTULIZAR INFORMACION
                     current->pais[i]->perdidos[0] += 1;
                     current->pais[j + a]->ganados[0] += 1;
@@ -375,12 +419,12 @@ void simularTodo(Team *&head)
                     {
                         v = goles();
                     } while (v[0] <= v[1]);
-                    /*
+
                     cout << "GOLES: \n"
                          << current->pais[i]->nombre << ": " << v[0] << "\n"
                          << current->pais[j + a]->nombre << " : " << v[1] << endl;
                     cout << current->pais[i]->nombre << " GANÓ" << endl;
-                    */
+
                     //
                     current->pais[i]->ganados[0] += 1;
                     current->pais[j + a]->perdidos[0] += 1;
@@ -390,16 +434,17 @@ void simularTodo(Team *&head)
                     {
                         v = goles();
                     } while (v[0] != v[1]);
-                    /*
+
                     cout << "GOLES: \n"
                          << current->pais[i]->nombre << ": " << v[0] << "\n"
                          << current->pais[j + a]->nombre << " : " << v[1] << endl;
                     cout << current->pais[i]->nombre << " Y " << current->pais[j + a]->nombre << " EMPATARON" << endl;
-                    */
+
                     current->pais[i]->empatados[0] += 1;
                     current->pais[j + a]->empatados[0] += 1;
                     break;
                 }
+                cout << "----------------------------------------------------------------------------------------------------------------" << endl;
                 current->pais[i]->goleFavor[0] += v[0];
                 current->pais[i]->golesContra[0] += v[1];
                 current->pais[j + a]->golesContra[0] += v[0];
@@ -577,10 +622,9 @@ void octavos()
     vector<int> v;
     do
     {
-        /*
-        cout << "----------------- GRUPO: " << current->grupo << "----------------------------" << endl;
         cout << current->clasificados[0]->nombre << " vs " << current->clasificados[1]->nombre << endl;
-        */
+        cout << "PARTIDO JUGADO EN EL " << headEstadio->nombre << endl;
+        headEstadio = headEstadio->next;
         numeroAleatorio = rand() % 2;
         switch (numeroAleatorio)
         {
@@ -589,12 +633,11 @@ void octavos()
             {
                 v = goles();
             } while (v[0] >= v[1]);
-            /*
+
             cout << "GOLES: \n"
                  << current->clasificados[0]->nombre << ": " << v[0] << "\n"
                  << current->clasificados[1]->nombre << " : " << v[1] << endl;
             cout << current->clasificados[0]->nombre << " PERDIO" << endl;
-            */
 
             // ACTULIZAR INFORMACION
             current->clasificados[1]->octavosClas = true;
@@ -605,16 +648,18 @@ void octavos()
             {
                 v = goles();
             } while (v[0] <= v[1]);
-            /*
+
             cout << "GOLES: \n"
                  << current->clasificados[0]->nombre << ": " << v[0] << "\n"
                  << current->clasificados[1]->nombre << " : " << v[1] << endl;
             cout << current->clasificados[0]->nombre << " GANÓ" << endl;
-            */
+
             //
             current->clasificados[0]->octavosClas = true;
             break;
         }
+        cout << "----------------------------------------------------------------------------------------------------------------" << endl;
+
         current->clasificados[0]->goleFavor.push_back(v[0]);
         current->clasificados[1]->goleFavor.push_back(v[1]);
         current = current->next;
@@ -652,9 +697,10 @@ void cuartos()
     do
     {
         /*
-        cout << "---------------------------- GRUPO: " << current->grupo << "----------------------------" << endl;
+        cout << "---------------------------- GRUPO: " << current->grupo << "----------------------------" << endl;*/
         cout << current->clasificados[0]->nombre << " vs " << current->clasificados[1]->nombre << endl;
-        */
+        cout << "PARTIDO JUGADO EN EL " << headEstadio->nombre << endl;
+        headEstadio = headEstadio->next;
         numeroAleatorio = rand() % 2;
         switch (numeroAleatorio)
         {
@@ -663,12 +709,12 @@ void cuartos()
             {
                 v = goles();
             } while (v[0] >= v[1]);
-            /*
+
             cout << "GOLES: \n"
                  << current->clasificados[0]->nombre << ": " << v[0] << "\n"
                  << current->clasificados[1]->nombre << " : " << v[1] << endl;
             cout << current->clasificados[0]->nombre << " PERDIO" << endl;
-            */
+
             // ACTULIZAR INFORMACION
             current->clasificados[1]->cuartosClas = true;
             break;
@@ -678,12 +724,12 @@ void cuartos()
             {
                 v = goles();
             } while (v[0] <= v[1]);
-            /*
+
             cout << "GOLES: \n"
                  << current->clasificados[0]->nombre << ": " << v[0] << "\n"
                  << current->clasificados[1]->nombre << " : " << v[1] << endl;
             cout << current->clasificados[0]->nombre << " GANÓ" << endl;
-            */
+
             //
             current->clasificados[0]->cuartosClas = true;
             break;
@@ -725,10 +771,9 @@ void semifinal()
     vector<int> v;
     do
     {
-        /*
-        cout "---------------------------- GRUPO: " << current->grupo << "----------------------------" << endl;
         cout << current->clasificados[0]->nombre << " vs " << current->clasificados[1]->nombre << endl;
-        */
+        cout << "PARTIDO JUGADO EN EL " << headEstadio->nombre << endl;
+        headEstadio = headEstadio->next;
         numeroAleatorio = rand() % 2;
         switch (numeroAleatorio)
         {
@@ -737,12 +782,12 @@ void semifinal()
             {
                 v = goles();
             } while (v[0] >= v[1]);
-            /*
+
             cout << "GOLES: \n"
                  << current->clasificados[0]->nombre << ": " << v[0] << "\n"
                  << current->clasificados[1]->nombre << " : " << v[1] << endl;
             cout << current->clasificados[0]->nombre << " PERDIO" << endl;
-            */
+
             // ACTULIZAR INFORMACION
             current->clasificados[1]->semifinalClas = true;
             break;
@@ -752,12 +797,12 @@ void semifinal()
             {
                 v = goles();
             } while (v[0] <= v[1]);
-            /*
+
             cout << "GOLES: \n"
                  << current->clasificados[0]->nombre << ": " << v[0] << "\n"
                  << current->clasificados[1]->nombre << " : " << v[1] << endl;
             cout << current->clasificados[0]->nombre << " GANÓ" << endl;
-            */
+
             //
             current->clasificados[0]->semifinalClas = true;
             break;
@@ -787,7 +832,9 @@ void partidoFinal()
     createFinal(paisesFinal);
     finalP *current = headFP;
     vector<int> v;
-    // cout << current->clasificados[0]->nombre << " vs " << current->clasificados[1]->nombre << endl;
+    cout << current->clasificados[0]->nombre << " vs " << current->clasificados[1]->nombre << endl;
+    cout << "PARTIDO JUGADO EN EL " << headEstadio->nombre << endl;
+    headEstadio = headEstadio->next;
     numeroAleatorio = rand() % 2;
     switch (numeroAleatorio)
     {
@@ -796,12 +843,12 @@ void partidoFinal()
         {
             v = goles();
         } while (v[0] >= v[1]);
-        /*
+
         cout << "GOLES: \n"
              << current->clasificados[0]->nombre << ": " << v[0] << "\n"
              << current->clasificados[1]->nombre << " : " << v[1] << endl;
         cout << current->clasificados[0]->nombre << " PERDIO" << endl;
-        */
+
         // ACTULIZAR INFORMACION
         current->clasificados[1]->winner = true;
         break;
@@ -811,12 +858,12 @@ void partidoFinal()
         {
             v = goles();
         } while (v[0] <= v[1]);
-        /*
+
         cout << "GOLES: \n"
              << current->clasificados[0]->nombre << ": " << v[0] << "\n"
              << current->clasificados[1]->nombre << " : " << v[1] << endl;
         cout << current->clasificados[0]->nombre << " GANÓ" << endl;
-        */
+
         // ACTULIZAR INFORMACION
         current->clasificados[0]->winner = true;
         break;
@@ -842,7 +889,10 @@ void tercerPuesto()
         }
         current = current->next;
     } while (current != nullptr);
-    // cout << current->clasificados[0]->nombre << " vs " << current->clasificados[1]->nombre << endl;
+    //
+    cout << paisesFinal[0]->nombre << " vs " << paisesFinal[1]->nombre << endl;
+    cout << "PARTIDO JUGADO EN EL " << headEstadio->nombre << endl;
+    headEstadio = headEstadio->next;
     numeroAleatorio = rand() % 2;
     current = headSF;
     switch (numeroAleatorio)
@@ -852,12 +902,12 @@ void tercerPuesto()
         {
             v = goles();
         } while (v[0] >= v[1]);
-        /*
+
         cout << "GOLES: \n"
              << current->clasificados[0]->nombre << ": " << v[0] << "\n"
              << current->clasificados[1]->nombre << " : " << v[1] << endl;
         cout << current->clasificados[0]->nombre << " PERDIO" << endl;
-        */
+
         // ACTULIZAR INFORMACION
         paisesFinal[1]->winnerT = true;
         break;
@@ -867,18 +917,963 @@ void tercerPuesto()
         {
             v = goles();
         } while (v[0] <= v[1]);
-        /*
+
         cout << "GOLES: \n"
              << current->clasificados[0]->nombre << ": " << v[0] << "\n"
              << current->clasificados[1]->nombre << " : " << v[1] << endl;
         cout << current->clasificados[0]->nombre << " GANÓ" << endl;
-        */
+
         // ACTULIZAR INFORMACION
         paisesFinal[0]->winnerT = true;
         break;
     }
     paisesFinal[0]->goleFavor.push_back(v[0]);
     paisesFinal[1]->goleFavor.push_back(v[1]);
+}
+// EL USUARIOS INGRESA LOS RESULTADOS
+void faseGruposIn()
+{
+    Team *current = head;
+    vector<int> v;
+    int choise, golesA, golesB, a = 0;
+    do
+    {
+        cout << "----------------------------" << current->group << "----------------------------" << endl;
+        for (int i = 0; i < current->countries.size(); i++)
+        {
+            for (int j = 1; j < current->countries.size(); j++)
+            {
+                if (j + a >= current->countries.size())
+                {
+                    break;
+                }
+                cout << current->pais[i]->nombre << " vs " << current->pais[j + a]->nombre << endl;
+                cout << "PARTIDO JUGADO EN EL " << headEstadio->nombre << endl;
+                headEstadio = headEstadio->next;
+                //
+                cout << "Opciones del partido: " << endl;
+                cout << "0: Pierde " << current->pais[i]->nombre << " contra " << current->pais[j + a]->nombre << endl;
+                cout << "1: Gana " << current->pais[i]->nombre << " contra " << current->pais[j + a]->nombre << endl;
+                cout << "2: Empatan " << current->pais[i]->nombre << " y " << current->pais[j + a]->nombre << endl;
+                cout << "Opcion: ";
+                cin >> choise;
+                switch (choise)
+                {
+                    // PIERDE EL PAIS A
+                case 0:
+                    do
+                    {
+                        cout << "Ingrese los goles de " << current->pais[i]->nombre << ": "; // 4
+                        cin >> golesA;
+                        cout << "Ingrese los goles de " << current->pais[j + a]->nombre << ": "; // 8
+                        cin >> golesB;
+                        if (golesA >= golesB)
+                        {
+                            cout << "LOS GOLES DE " << current->pais[i]->nombre << " DEBEN SER MENORES A LOS DE " << current->pais[j + a]->nombre << endl;
+                        }
+                    } while (golesA >= golesB);
+
+                    cout << "GOLES: \n"
+                         << current->pais[i]->nombre << ": " << golesA << "\n"
+                         << current->pais[j + a]->nombre << " : " << golesB << endl;
+                    cout << current->pais[i]->nombre << " PERDIO" << endl;
+
+                    // ACTULIZAR INFORMACION
+                    current->pais[i]->perdidos[0] += 1;
+                    current->pais[j + a]->ganados[0] += 1;
+                    break;
+                // GANA EL PAIS A
+                case 1:
+                    do
+                    {
+                        cout << "Ingrese los goles de " << current->pais[i]->nombre << ": "; // 4
+                        cin >> golesA;
+                        cout << "Ingrese los goles de " << current->pais[j + a]->nombre << ": "; // 8
+                        cin >> golesB;
+                        if (golesA <= golesB)
+                        {
+                            cout << "LOS GOLES DE " << current->pais[i]->nombre << " DEBEN SER MAYORES A LOS DE " << current->pais[j + a]->nombre << endl;
+                        }
+                    } while (golesA <= golesB);
+
+                    cout << "GOLES: \n"
+                         << current->pais[i]->nombre << ": " << golesA << "\n"
+                         << current->pais[j + a]->nombre << " : " << golesB << endl;
+                    cout << current->pais[i]->nombre << " GANÓ" << endl;
+
+                    //
+                    current->pais[i]->ganados[0] += 1;
+                    current->pais[j + a]->perdidos[0] += 1;
+                    break;
+                    // EMPATAN
+                case 2:
+                    do
+                    {
+                        cout << "Ingrese los goles de " << current->pais[i]->nombre << ": "; // 4
+                        cin >> golesA;
+                        cout << "Ingrese los goles de " << current->pais[j + a]->nombre << ": "; // 8
+                        cin >> golesB;
+                        if (golesA != golesB)
+                        {
+                            cout << "LOS GOLES DE " << current->pais[i]->nombre << " DEBEN SER IGUALES A LOS DE " << current->pais[j + a]->nombre << endl;
+                        }
+                    } while (golesA != golesB);
+
+                    cout << "GOLES: \n"
+                         << current->pais[i]->nombre << ": " << golesA << "\n"
+                         << current->pais[j + a]->nombre << " : " << golesB << endl;
+                    cout << current->pais[i]->nombre << " Y " << current->pais[j + a]->nombre << " EMPATARON" << endl;
+
+                    current->pais[i]->empatados[0] += 1;
+                    current->pais[j + a]->empatados[0] += 1;
+                    break;
+                }
+                cout << "----------------------------------------------------------------------------------------------------------------" << endl;
+                current->pais[i]->goleFavor[0] += golesA;
+                current->pais[i]->golesContra[0] += golesB;
+                current->pais[j + a]->golesContra[0] += golesA;
+                current->pais[j + a]->goleFavor[0] += golesB;
+            }
+
+            a += 1;
+        }
+        current = current->next;
+        a = 0;
+    } while (current != nullptr);
+    calcularPuntos();
+    calcularPosicion();
+}
+void octavosIn()
+{
+    vector<pais *> paisesOctavos;
+    vector<pais *> aux_paisesOctavos;
+    Team *currentT = head;
+    Team *aux = currentT->next;
+    int num = 1, numeroAleatorio, a = 0;
+    do
+    {
+        aux = currentT->next;
+        for (int i = 0; i < nClasificados; i = i + 2)
+        {
+            paisesOctavos.push_back(currentT->posicionClasificados[i]);
+            paisesOctavos.push_back(aux->posicionClasificados[i]);
+            //
+            aux_paisesOctavos.push_back(currentT->posicionClasificados[i + 1]);
+            aux_paisesOctavos.push_back(aux->posicionClasificados[i + 1]);
+        }
+        currentT = currentT->next->next;
+        createOctavos(num, paisesOctavos);
+        createOctavos(num + 1, aux_paisesOctavos);
+        num += 2;
+        paisesOctavos.clear();
+        aux_paisesOctavos.clear();
+    } while (currentT != nullptr);
+    // CALCULAR Y ASÍ
+    octavosF *current = headO;
+    int choise, golesA, golesB;
+    do
+    {
+        cout << current->clasificados[0]->nombre << " vs " << current->clasificados[1]->nombre << endl;
+        cout << "PARTIDO JUGADO EN EL " << headEstadio->nombre << endl;
+        headEstadio = headEstadio->next;
+        cout << "Opciones del partido: " << endl;
+        cout << "0: Pierde " << current->clasificados[0]->nombre << " contra " << current->clasificados[1]->nombre << endl;
+        cout << "1: Gana " << current->clasificados[0]->nombre << " contra " << current->clasificados[1]->nombre << endl;
+        cout << "2: " << current->clasificados[0]->nombre << " y " << current->clasificados[1]->nombre << " empatan y el partido se define en el tiempo extra (Si ambos equipos realizan la misma cantidad de goles pasan a penales)" << endl;
+        cout << "Opcion: ";
+        cin >> choise;
+        switch (choise)
+        {
+        case 0:
+            do
+            {
+                cout << "Ingrese los goles de " << current->clasificados[0]->nombre << ": "; // 4
+                cin >> golesA;
+                cout << "Ingrese los goles de " << current->clasificados[1]->nombre << ": "; // 8
+                cin >> golesB;
+                if (golesA >= golesB)
+                {
+                    cout << "LOS GOLES DE " << current->clasificados[0]->nombre << " DEBEN SER MENORES A LOS DE " << current->clasificados[1]->nombre << endl;
+                }
+            } while (golesA >= golesB);
+
+            cout << "GOLES: \n"
+                 << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                 << current->clasificados[1]->nombre << " : " << golesB << endl;
+            cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+            //
+            current->clasificados[1]->octavosClas = true;
+            break;
+        case 1:
+            do
+            {
+                cout << "Ingrese los goles de " << current->clasificados[0]->nombre << ": "; // 4
+                cin >> golesA;
+                cout << "Ingrese los goles de " << current->clasificados[1]->nombre << ": "; // 8
+                cin >> golesB;
+                if (golesA <= golesB)
+                {
+                    cout << "LOS GOLES DE " << current->clasificados[0]->nombre << " DEBEN SER MAYORES A LOS DE " << current->clasificados[1]->nombre << endl;
+                }
+            } while (golesA <= golesB);
+
+            cout << "GOLES: \n"
+                 << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                 << current->clasificados[1]->nombre << " : " << golesB << endl;
+            cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+
+            current->clasificados[0]->octavosClas = true;
+            break;
+
+        // PROLOGA
+        case 2:
+            cout << "Ingrese los goles que realizaron los equipos en la prologa: " << endl;
+            cout << "Goles de " << current->clasificados[0]->nombre << ": ";
+            cin >> golesA;
+            cout << "Goles de " << current->clasificados[1]->nombre << ": ";
+            cin >> golesB;
+            if (golesA != golesB)
+            {
+                if (golesA > golesB)
+                {
+                    cout << "GOLES: \n"
+                         << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                         << current->clasificados[1]->nombre << " : " << golesB << endl;
+                    cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+                    current->clasificados[0]->octavosClas = true;
+                }
+                else
+                {
+                    cout << "GOLES: \n"
+                         << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                         << current->clasificados[1]->nombre << " : " << golesB << endl;
+                    cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+                    current->clasificados[1]->octavosClas = true;
+                }
+
+                break;
+            }
+            cout << "Como los equipos anotaron la misma cantidad de goles el partido se definirá por panales realizados" << endl;
+        // PENALES
+        case 3:
+            int penal;
+            vector<int> penalesAnotados;
+            penalesAnotados.push_back(0);
+            penalesAnotados.push_back(0);
+            do
+            {
+                int intento = 1;
+                while (intento <= 5)
+                {
+                    cout << "Penal " << intento << " del equipo " << current->clasificados[0]->nombre << endl;
+                    cout << "Anotó? (No: 0 - Sí: 1)" << endl;
+                    cin >> penal;
+                    if (penal == 1)
+                    {
+                        penalesAnotados[0] += 1;
+                    }
+                    //
+                    cout << "Penal " << intento << " del equipo " << current->clasificados[1]->nombre << endl;
+                    cout << "Anotó? (No: 0 - Sí: 1)" << endl;
+                    cin >> penal;
+                    if (penal == 1)
+                    {
+                        penalesAnotados[1] += 1;
+                    }
+                    intento++;
+                }
+                if (penalesAnotados[0] != penalesAnotados[1])
+                {
+                    if (penalesAnotados[0] > penalesAnotados[1])
+                    {
+                        cout << "GOLES: \n"
+                             << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                             << current->clasificados[1]->nombre << " : " << golesB << endl;
+                        cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+                        current->clasificados[0]->octavosClas = true;
+                    }
+                    else
+                    {
+                        cout << "GOLES: \n"
+                             << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                             << current->clasificados[1]->nombre << " : " << golesB << endl;
+                        cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+                        current->clasificados[1]->octavosClas = true;
+                    }
+                    break;
+                }
+                else
+                {
+                    cout << "LOS EQUIPOS REALIZARON LA MISMA CANTIDAD DE ANOTACIONES EN LOS PENALES" << endl;
+                    cout << "POR ENDE SE VUELVE A REALIZAR OTRA TANDA DE PENALES" << endl;
+                }
+            } while (penalesAnotados[0] == penalesAnotados[1]);
+        }
+        cout << "----------------------------------------------------------------------------------------------------------------" << endl;
+        current->clasificados[0]->goleFavor.push_back(golesA);
+        current->clasificados[1]->goleFavor.push_back(golesB);
+        current = current->next;
+    } while (current != nullptr);
+}
+void cuartosIn()
+{
+    vector<pais *> paisesCuartos;
+    octavosF *currentT = headO;
+    int num = 1, numeroAleatorio, a = 0;
+    do
+    {
+        for (int i = 0; i < currentT->clasificados.size(); i++)
+        {
+            if (currentT->clasificados[i]->octavosClas == true)
+            {
+                paisesCuartos.push_back(currentT->clasificados[i]);
+            }
+        }
+        currentT = currentT->next;
+        for (int i = 0; i < currentT->clasificados.size(); i++)
+        {
+            if (currentT->clasificados[i]->octavosClas == true)
+            {
+                paisesCuartos.push_back(currentT->clasificados[i]);
+            }
+        }
+        createCuartos(num, paisesCuartos);
+        num += 1;
+        paisesCuartos.clear();
+        currentT = currentT->next;
+    } while (currentT != nullptr);
+    cuartosF *current = headC;
+    int choise, golesA, golesB;
+    do
+    {
+        cout << current->clasificados[0]->nombre << " vs " << current->clasificados[1]->nombre << endl;
+        cout << "PARTIDO JUGADO EN EL " << headEstadio->nombre << endl;
+        headEstadio = headEstadio->next;
+        cout << "Opciones del partido: " << endl;
+        cout << "0: Pierde " << current->clasificados[0]->nombre << " contra " << current->clasificados[1]->nombre << endl;
+        cout << "1: Gana " << current->clasificados[0]->nombre << " contra " << current->clasificados[1]->nombre << endl;
+        cout << "2: " << current->clasificados[0]->nombre << " y " << current->clasificados[1]->nombre << " empatan y el partido se define en el tiempo extra (Si ambos equipos realizan la misma cantidad de goles pasan a penales)" << endl;
+        cout << "Opcion: ";
+        cin >> choise;
+        switch (choise)
+        {
+        case 0:
+            do
+            {
+                cout << "Ingrese los goles de " << current->clasificados[0]->nombre << ": "; // 4
+                cin >> golesA;
+                cout << "Ingrese los goles de " << current->clasificados[1]->nombre << ": "; // 8
+                cin >> golesB;
+                if (golesA >= golesB)
+                {
+                    cout << "LOS GOLES DE " << current->clasificados[0]->nombre << " DEBEN SER MENORES A LOS DE " << current->clasificados[1]->nombre << endl;
+                }
+            } while (golesA >= golesB);
+
+            cout << "GOLES: \n"
+                 << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                 << current->clasificados[1]->nombre << " : " << golesB << endl;
+            cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+            //
+            current->clasificados[1]->cuartosClas = true;
+            break;
+        case 1:
+            do
+            {
+                cout << "Ingrese los goles de " << current->clasificados[0]->nombre << ": "; // 4
+                cin >> golesA;
+                cout << "Ingrese los goles de " << current->clasificados[1]->nombre << ": "; // 8
+                cin >> golesB;
+                if (golesA <= golesB)
+                {
+                    cout << "LOS GOLES DE " << current->clasificados[0]->nombre << " DEBEN SER MAYORES A LOS DE " << current->clasificados[1]->nombre << endl;
+                }
+            } while (golesA <= golesB);
+
+            cout << "GOLES: \n"
+                 << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                 << current->clasificados[1]->nombre << " : " << golesB << endl;
+            cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+
+            current->clasificados[0]->cuartosClas = true;
+            break;
+
+        // PROLOGA
+        case 2:
+            cout << "Ingrese los goles que realizaron los equipos en la prologa: " << endl;
+            cout << "Goles de " << current->clasificados[0]->nombre << ": ";
+            cin >> golesA;
+            cout << "Goles de " << current->clasificados[1]->nombre << ": ";
+            cin >> golesB;
+            if (golesA != golesB)
+            {
+                if (golesA > golesB)
+                {
+                    cout << "GOLES: \n"
+                         << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                         << current->clasificados[1]->nombre << " : " << golesB << endl;
+                    cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+                    current->clasificados[0]->cuartosClas = true;
+                }
+                else
+                {
+                    cout << "GOLES: \n"
+                         << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                         << current->clasificados[1]->nombre << " : " << golesB << endl;
+                    cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+                    current->clasificados[1]->cuartosClas = true;
+                }
+
+                break;
+            }
+            cout << "Como los equipos anotaron la misma cantidad de goles el partido se definirá por panales realizados" << endl;
+        // PENALES
+        case 3:
+            int penal;
+            vector<int> penalesAnotados;
+            penalesAnotados.push_back(0);
+            penalesAnotados.push_back(0);
+            do
+            {
+                int intento = 1;
+                while (intento <= 5)
+                {
+                    cout << "Penal " << intento << " del equipo " << current->clasificados[0]->nombre << endl;
+                    cout << "Anotó? (No: 0 - Sí: 1)" << endl;
+                    cin >> penal;
+                    if (penal == 1)
+                    {
+                        penalesAnotados[0] += 1;
+                    }
+                    //
+                    cout << "Penal " << intento << " del equipo " << current->clasificados[1]->nombre << endl;
+                    cout << "Anotó? (No: 0 - Sí: 1)" << endl;
+                    cin >> penal;
+                    if (penal == 1)
+                    {
+                        penalesAnotados[1] += 1;
+                    }
+                    intento++;
+                }
+                if (penalesAnotados[0] != penalesAnotados[1])
+                {
+                    if (penalesAnotados[0] > penalesAnotados[1])
+                    {
+                        cout << "GOLES: \n"
+                             << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                             << current->clasificados[1]->nombre << " : " << golesB << endl;
+                        cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+                        current->clasificados[0]->cuartosClas = true;
+                    }
+                    else
+                    {
+                        cout << "GOLES: \n"
+                             << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                             << current->clasificados[1]->nombre << " : " << golesB << endl;
+                        cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+                        current->clasificados[1]->cuartosClas = true;
+                    }
+                    break;
+                }
+                else
+                {
+                    cout << "LOS EQUIPOS REALIZARON LA MISMA CANTIDAD DE ANOTACIONES EN LOS PENALES" << endl;
+                    cout << "POR ENDE SE VUELVE A REALIZAR OTRA TANDA DE PENALES" << endl;
+                }
+            } while (penalesAnotados[0] == penalesAnotados[1]);
+        }
+        cout << "----------------------------------------------------------------------------------------------------------------" << endl;
+        current->clasificados[0]->goleFavor.push_back(golesA);
+        current->clasificados[1]->goleFavor.push_back(golesB);
+        current = current->next;
+    } while (current != nullptr);
+}
+void semifinalIn()
+{
+    vector<pais *> paisesSemifinal;
+    cuartosF *currentT = headC;
+    int num = 1, numeroAleatorio, a = 0;
+    do
+    {
+        for (int i = 0; i < currentT->clasificados.size(); i++)
+        {
+            if (currentT->clasificados[i]->cuartosClas == true)
+            {
+                paisesSemifinal.push_back(currentT->clasificados[i]);
+            }
+        }
+        currentT = currentT->next;
+        for (int i = 0; i < currentT->clasificados.size(); i++)
+        {
+            if (currentT->clasificados[i]->cuartosClas == true)
+            {
+                paisesSemifinal.push_back(currentT->clasificados[i]);
+            }
+        }
+        createSemifinal(num, paisesSemifinal);
+        num += 1;
+        paisesSemifinal.clear();
+        currentT = currentT->next;
+    } while (currentT != nullptr);
+    semifinal_ *current = headSF;
+    int choise, golesA, golesB;
+    do
+    {
+        cout << current->clasificados[0]->nombre << " vs " << current->clasificados[1]->nombre << endl;
+        cout << "PARTIDO JUGADO EN EL " << headEstadio->nombre << endl;
+        headEstadio = headEstadio->next;
+        cout << "Opciones del partido: " << endl;
+        cout << "0: Pierde " << current->clasificados[0]->nombre << " contra " << current->clasificados[1]->nombre << endl;
+        cout << "1: Gana " << current->clasificados[0]->nombre << " contra " << current->clasificados[1]->nombre << endl;
+        cout << "2: " << current->clasificados[0]->nombre << " y " << current->clasificados[1]->nombre << " empatan y el partido se define en el tiempo extra (Si ambos equipos realizan la misma cantidad de goles pasan a penales)" << endl;
+        cout << "Opcion: ";
+        cin >> choise;
+        switch (choise)
+        {
+        case 0:
+            do
+            {
+                cout << "Ingrese los goles de " << current->clasificados[0]->nombre << ": "; // 4
+                cin >> golesA;
+                cout << "Ingrese los goles de " << current->clasificados[1]->nombre << ": "; // 8
+                cin >> golesB;
+                if (golesA >= golesB)
+                {
+                    cout << "LOS GOLES DE " << current->clasificados[0]->nombre << " DEBEN SER MENORES A LOS DE " << current->clasificados[1]->nombre << endl;
+                }
+            } while (golesA >= golesB);
+
+            cout << "GOLES: \n"
+                 << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                 << current->clasificados[1]->nombre << " : " << golesB << endl;
+            cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+            //
+            current->clasificados[1]->semifinalClas = true;
+            break;
+        case 1:
+            do
+            {
+                cout << "Ingrese los goles de " << current->clasificados[0]->nombre << ": "; // 4
+                cin >> golesA;
+                cout << "Ingrese los goles de " << current->clasificados[1]->nombre << ": "; // 8
+                cin >> golesB;
+                if (golesA <= golesB)
+                {
+                    cout << "LOS GOLES DE " << current->clasificados[0]->nombre << " DEBEN SER MAYORES A LOS DE " << current->clasificados[1]->nombre << endl;
+                }
+            } while (golesA <= golesB);
+
+            cout << "GOLES: \n"
+                 << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                 << current->clasificados[1]->nombre << " : " << golesB << endl;
+            cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+
+            current->clasificados[0]->semifinalClas = true;
+            break;
+
+        // PROLOGA
+        case 2:
+            cout << "Ingrese los goles que realizaron los equipos en la prologa: " << endl;
+            cout << "Goles de " << current->clasificados[0]->nombre << ": ";
+            cin >> golesA;
+            cout << "Goles de " << current->clasificados[1]->nombre << ": ";
+            cin >> golesB;
+            if (golesA != golesB)
+            {
+                if (golesA > golesB)
+                {
+                    cout << "GOLES: \n"
+                         << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                         << current->clasificados[1]->nombre << " : " << golesB << endl;
+                    cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+                    current->clasificados[0]->semifinalClas = true;
+                }
+                else
+                {
+                    cout << "GOLES: \n"
+                         << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                         << current->clasificados[1]->nombre << " : " << golesB << endl;
+                    cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+                    current->clasificados[1]->semifinalClas = true;
+                }
+
+                break;
+            }
+            cout << "Como los equipos anotaron la misma cantidad de goles el partido se definirá por panales realizados" << endl;
+        // PENALES
+        case 3:
+
+            int penal, totalA = 0, totalB;
+            vector<int> penalesAnotados;
+            penalesAnotados.push_back(0);
+            penalesAnotados.push_back(0);
+            do
+            {
+                int intento = 1;
+                while (intento <= 5)
+                {
+                    cout << "Penal " << intento << " del equipo " << current->clasificados[0]->nombre << endl;
+                    cout << "Anotó? (No: 0 - Sí: 1)" << endl;
+                    cin >> penal;
+                    if (penal == 1)
+                    {
+                        penalesAnotados[0] += 1;
+                    }
+                    //
+                    cout << "Penal " << intento << " del equipo " << current->clasificados[1]->nombre << endl;
+                    cout << "Anotó? (No: 0 - Sí: 1)" << endl;
+                    cin >> penal;
+                    if (penal == 1)
+                    {
+                        penalesAnotados[1] += 1;
+                    }
+                    intento++;
+                }
+                if (penalesAnotados[0] != penalesAnotados[1])
+                {
+                    if (penalesAnotados[0] > penalesAnotados[1])
+                    {
+                        cout << "GOLES: \n"
+                             << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                             << current->clasificados[1]->nombre << " : " << golesB << endl;
+                        cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+                        current->clasificados[0]->semifinalClas = true;
+                    }
+                    else
+                    {
+                        cout << "GOLES: \n"
+                             << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                             << current->clasificados[1]->nombre << " : " << golesB << endl;
+                        cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+                        current->clasificados[1]->semifinalClas = true;
+                    }
+                    break;
+                }
+                else
+                {
+                    cout << "LOS EQUIPOS REALIZARON LA MISMA CANTIDAD DE ANOTACIONES EN LOS PENALES" << endl;
+                    cout << "POR ENDE SE VUELVE A REALIZAR OTRA TANDA DE PENALES" << endl;
+                }
+            } while (penalesAnotados[0] == penalesAnotados[1]);
+        }
+        cout << "----------------------------------------------------------------------------------------------------------------" << endl;
+
+        current->clasificados[0]->goleFavor.push_back(golesA);
+        current->clasificados[1]->goleFavor.push_back(golesB);
+        current = current->next;
+    } while (current != nullptr);
+}
+void partidoFinalIn()
+{
+    vector<pais *> paisesFinal;
+    semifinal_ *currentT = headSF;
+    int numeroAleatorio, a = 0;
+    do
+    {
+        for (int i = 0; i < currentT->clasificados.size(); i++)
+        {
+            if (currentT->clasificados[i]->semifinalClas == true)
+            {
+                paisesFinal.push_back(currentT->clasificados[i]);
+            }
+        }
+        currentT = currentT->next;
+    } while (currentT != nullptr);
+    createFinal(paisesFinal);
+    finalP *current = headFP;
+    int choise, golesA, golesB;
+    do
+    {
+        cout << current->clasificados[0]->nombre << " vs " << current->clasificados[1]->nombre << endl;
+        cout << "PARTIDO JUGADO EN EL " << headEstadio->nombre << endl;
+        headEstadio = headEstadio->next;
+        cout << "Opciones del partido: " << endl;
+        cout << "0: Pierde " << current->clasificados[0]->nombre << " contra " << current->clasificados[1]->nombre << endl;
+        cout << "1: Gana " << current->clasificados[0]->nombre << " contra " << current->clasificados[1]->nombre << endl;
+        cout << "2: " << current->clasificados[0]->nombre << " y " << current->clasificados[1]->nombre << " empatan y el partido se define en el tiempo extra (Si ambos equipos realizan la misma cantidad de goles pasan a penales)" << endl;
+        cout << "Opcion: ";
+        cin >> choise;
+        switch (choise)
+        {
+        case 0:
+            do
+            {
+                cout << "Ingrese los goles de " << current->clasificados[0]->nombre << ": "; // 4
+                cin >> golesA;
+                cout << "Ingrese los goles de " << current->clasificados[1]->nombre << ": "; // 8
+                cin >> golesB;
+                if (golesA >= golesB)
+                {
+                    cout << "LOS GOLES DE " << current->clasificados[0]->nombre << " DEBEN SER MENORES A LOS DE " << current->clasificados[1]->nombre << endl;
+                }
+            } while (golesA >= golesB);
+
+            cout << "GOLES: \n"
+                 << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                 << current->clasificados[1]->nombre << " : " << golesB << endl;
+            cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+            //
+            current->clasificados[1]->winner = true;
+            break;
+        case 1:
+            do
+            {
+                cout << "Ingrese los goles de " << current->clasificados[0]->nombre << ": "; // 4
+                cin >> golesA;
+                cout << "Ingrese los goles de " << current->clasificados[1]->nombre << ": "; // 8
+                cin >> golesB;
+                if (golesA <= golesB)
+                {
+                    cout << "LOS GOLES DE " << current->clasificados[0]->nombre << " DEBEN SER MAYORES A LOS DE " << current->clasificados[1]->nombre << endl;
+                }
+            } while (golesA <= golesB);
+
+            cout << "GOLES: \n"
+                 << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                 << current->clasificados[1]->nombre << " : " << golesB << endl;
+            cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+
+            current->clasificados[0]->winner = true;
+            break;
+
+        // PROLOGA
+        case 2:
+            cout << "Ingrese los goles que realizaron los equipos en la prologa: " << endl;
+            cout << "Goles de " << current->clasificados[0]->nombre << ": ";
+            cin >> golesA;
+            cout << "Goles de " << current->clasificados[1]->nombre << ": ";
+            cin >> golesB;
+            if (golesA != golesB)
+            {
+                if (golesA > golesB)
+                {
+                    cout << "GOLES: \n"
+                         << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                         << current->clasificados[1]->nombre << " : " << golesB << endl;
+                    cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+                    current->clasificados[0]->winner = true;
+                }
+                else
+                {
+                    cout << "GOLES: \n"
+                         << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                         << current->clasificados[1]->nombre << " : " << golesB << endl;
+                    cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+                    current->clasificados[1]->winner = true;
+                }
+
+                break;
+            }
+            cout << "Como los equipos anotaron la misma cantidad de goles el partido se definirá por panales realizados" << endl;
+        // PENALES
+        case 3:
+            int penal;
+            vector<int> penalesAnotados;
+            penalesAnotados.push_back(0);
+            penalesAnotados.push_back(0);
+            do
+            {
+                int intento = 1;
+                while (intento <= 5)
+                {
+                    cout << "Penal " << intento << " del equipo " << current->clasificados[0]->nombre << endl;
+                    cout << "Anotó? (No: 0 - Sí: 1)" << endl;
+                    cin >> penal;
+                    if (penal == 1)
+                    {
+                        penalesAnotados[0] += 1;
+                    }
+                    //
+                    cout << "Penal " << intento << " del equipo " << current->clasificados[1]->nombre << endl;
+                    cout << "Anotó? (No: 0 - Sí: 1)" << endl;
+                    cin >> penal;
+                    if (penal == 1)
+                    {
+                        penalesAnotados[1] += 1;
+                    }
+                    intento++;
+                }
+                if (penalesAnotados[0] != penalesAnotados[1])
+                {
+                    if (penalesAnotados[0] > penalesAnotados[1])
+                    {
+                        cout << "GOLES: \n"
+                             << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                             << current->clasificados[1]->nombre << " : " << golesB << endl;
+                        cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+                        current->clasificados[0]->winner = true;
+                    }
+                    else
+                    {
+                        cout << "GOLES: \n"
+                             << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                             << current->clasificados[1]->nombre << " : " << golesB << endl;
+                        cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+                        current->clasificados[1]->winner = true;
+                    }
+                    break;
+                }
+                else
+                {
+                    cout << "LOS EQUIPOS REALIZARON LA MISMA CANTIDAD DE ANOTACIONES EN LOS PENALES" << endl;
+                    cout << "POR ENDE SE VUELVE A REALIZAR OTRA TANDA DE PENALES" << endl;
+                }
+            } while (penalesAnotados[0] == penalesAnotados[1]);
+        }
+        cout << "----------------------------------------------------------------------------------------------------------------" << endl;
+        current->clasificados[0]->goleFavor.push_back(golesA);
+        current->clasificados[1]->goleFavor.push_back(golesB);
+        current = current->next;
+    } while (current != nullptr);
+}
+void tercerPuestoIn()
+{
+    vector<pais *> paisesFinal;
+    semifinal_ *current = headSF;
+    int choise, golesA, golesB;
+    do
+    {
+        cout << current->clasificados[0]->nombre << " vs " << current->clasificados[1]->nombre << endl;
+        cout << "PARTIDO JUGADO EN EL " << headEstadio->nombre << endl;
+        headEstadio = headEstadio->next;
+        cout << "Opciones del partido: " << endl;
+        cout << "0: Pierde " << current->clasificados[0]->nombre << " contra " << current->clasificados[1]->nombre << endl;
+        cout << "1: Gana " << current->clasificados[0]->nombre << " contra " << current->clasificados[1]->nombre << endl;
+        cout << "2: " << current->clasificados[0]->nombre << " y " << current->clasificados[1]->nombre << " empatan y el partido se define en el tiempo extra (Si ambos equipos realizan la misma cantidad de goles pasan a penales)" << endl;
+        cout << "Opcion: ";
+        cin >> choise;
+        switch (choise)
+        {
+        case 0:
+            do
+            {
+                cout << "Ingrese los goles de " << current->clasificados[0]->nombre << ": "; // 4
+                cin >> golesA;
+                cout << "Ingrese los goles de " << current->clasificados[1]->nombre << ": "; // 8
+                cin >> golesB;
+                if (golesA >= golesB)
+                {
+                    cout << "LOS GOLES DE " << current->clasificados[0]->nombre << " DEBEN SER MENORES A LOS DE " << current->clasificados[1]->nombre << endl;
+                }
+            } while (golesA >= golesB);
+
+            cout << "GOLES: \n"
+                 << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                 << current->clasificados[1]->nombre << " : " << golesB << endl;
+            cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+            //
+            current->clasificados[1]->winnerT = true;
+            break;
+        case 1:
+            do
+            {
+                cout << "Ingrese los goles de " << current->clasificados[0]->nombre << ": "; // 4
+                cin >> golesA;
+                cout << "Ingrese los goles de " << current->clasificados[1]->nombre << ": "; // 8
+                cin >> golesB;
+                if (golesA <= golesB)
+                {
+                    cout << "LOS GOLES DE " << current->clasificados[0]->nombre << " DEBEN SER MAYORES A LOS DE " << current->clasificados[1]->nombre << endl;
+                }
+            } while (golesA <= golesB);
+
+            cout << "GOLES: \n"
+                 << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                 << current->clasificados[1]->nombre << " : " << golesB << endl;
+            cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+
+            current->clasificados[0]->winnerT = true;
+            break;
+
+        // PROLOGA
+        case 2:
+            cout << "Ingrese los goles que realizaron los equipos en la prologa: " << endl;
+            cout << "Goles de " << current->clasificados[0]->nombre << ": ";
+            cin >> golesA;
+            cout << "Goles de " << current->clasificados[1]->nombre << ": ";
+            cin >> golesB;
+            if (golesA != golesB)
+            {
+                if (golesA > golesB)
+                {
+                    cout << "GOLES: \n"
+                         << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                         << current->clasificados[1]->nombre << " : " << golesB << endl;
+                    cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+                    current->clasificados[0]->winnerT = true;
+                }
+                else
+                {
+                    cout << "GOLES: \n"
+                         << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                         << current->clasificados[1]->nombre << " : " << golesB << endl;
+                    cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+                    current->clasificados[1]->winnerT = true;
+                }
+
+                break;
+            }
+            cout << "Como los equipos anotaron la misma cantidad de goles el partido se definirá por panales realizados" << endl;
+        // PENALES
+        case 3:
+            int penal;
+            vector<int> penalesAnotados;
+            penalesAnotados.push_back(0);
+            penalesAnotados.push_back(0);
+            do
+            {
+                int intento = 1;
+                while (intento <= 5)
+                {
+                    cout << "Penal " << intento << " del equipo " << current->clasificados[0]->nombre << endl;
+                    cout << "Anotó? (No: 0 - Sí: 1)" << endl;
+                    cin >> penal;
+                    if (penal == 1)
+                    {
+                        penalesAnotados[0] += 1;
+                    }
+                    //
+                    cout << "Penal " << intento << " del equipo " << current->clasificados[1]->nombre << endl;
+                    cout << "Anotó? (No: 0 - Sí: 1)" << endl;
+                    cin >> penal;
+                    if (penal == 1)
+                    {
+                        penalesAnotados[1] += 1;
+                    }
+                    intento++;
+                }
+                if (penalesAnotados[0] != penalesAnotados[1])
+                {
+                    if (penalesAnotados[0] > penalesAnotados[1])
+                    {
+                        cout << "GOLES: \n"
+                             << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                             << current->clasificados[1]->nombre << " : " << golesB << endl;
+                        cout << current->clasificados[0]->nombre << " GANÓ" << endl;
+                        current->clasificados[0]->winnerT = true;
+                    }
+                    else
+                    {
+                        cout << "GOLES: \n"
+                             << current->clasificados[0]->nombre << ": " << golesA << "\n"
+                             << current->clasificados[1]->nombre << " : " << golesB << endl;
+                        cout << current->clasificados[0]->nombre << " PERDIO" << endl;
+                        current->clasificados[1]->winnerT = true;
+                    }
+                    break;
+                }
+                else
+                {
+                    cout << "LOS EQUIPOS REALIZARON LA MISMA CANTIDAD DE ANOTACIONES EN LOS PENALES" << endl;
+                    cout << "POR ENDE SE VUELVE A REALIZAR OTRA TANDA DE PENALES" << endl;
+                }
+            } while (penalesAnotados[0] == penalesAnotados[1]);
+        }
+        cout << "----------------------------------------------------------------------------------------------------------------" << endl;
+        current->clasificados[0]->goleFavor.push_back(golesA);
+        current->clasificados[1]->goleFavor.push_back(golesB);
+        current = current->next;
+    } while (current != nullptr);
 }
 // MOSTRAR ALGO
 void mostrarP(pais *&headP)
@@ -1109,18 +2104,21 @@ void mostrarTercerpuesto()
 //
 void menu()
 {
+
     if (read())
     {
         int choise;
         cout << "OPCIONES: " << endl;
         cout << "1: Simular todos los partidos, desde fase de grupos hasta la final (TODO POR PROBABILIDAD)." << endl;
+        cout << "2: Ingresar los resultados " << endl;
         cout << "Opcion: ";
         cin >> choise;
 
         switch (choise)
         {
         case 1:
-            simularTodo(head);
+            cout << "-------------------------------  FASE DE GRUPO -------------------------------" << endl;
+            faseGrupos(head);
             mostrarTabla();
             cout << "------------------------------- OCTAVOS DE FINAL -------------------------------" << endl;
             octavos();
@@ -1138,11 +2136,37 @@ void menu()
             tercerPuesto();
             mostrarTercerpuesto();
             break;
-
-        default:
+        case 2:
+            cout << "-------------------------------  FASE DE GRUPO -------------------------------" << endl;
+            faseGruposIn();
+            mostrarTabla();
+            cout << "------------------------------- OCTAVOS DE FINAL -------------------------------" << endl;
+            octavosIn();
+            mostrarOctavos();
+            cout << "------------------------------- CUARTOS DE FINAL -------------------------------" << endl;
+            cuartosIn();
+            mostrarCuartos();
+            cout << "------------------------------- SEMI-FINAL -------------------------------" << endl;
+            semifinalIn();
+            mostrarSemiFinal();
+            cout << "------------------------------- FINAL -------------------------------" << endl;
+            partidoFinalIn();
+            mostrarFinal();
+            cout << "------------------------------- TERCER PUESTO -------------------------------" << endl;
+            tercerPuestoIn();
+            mostrarTercerpuesto();
             break;
         }
-        // mostrar(head);
+
+        system("PAUSE");
+        system("cls");
+        head = nullptr;
+        headP = nullptr;
+        headO = nullptr;
+        headC = nullptr;
+        headSF = nullptr;
+        headFP = nullptr;
+        headEstadio = nullptr;
     }
     else
     {
