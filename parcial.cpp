@@ -1,9 +1,17 @@
-#include <iostream>
-#include <vector>
-#include <fstream>
-#include <codecvt>
-#include <locale>
-using namespace std;
+// LIBERIAS NECESARIAS PARA LA EJECUCION
+#include <iostream>  // ENTRADA Y SALIDA DE DATOS
+#include <vector>    // CREACION DE VECTORES
+#include <fstream>   // MANIPULAR ARCHIVOS
+#include <codecvt>   // UTF8
+#include <locale>    // PARA EL TIEMPO
+using namespace std; // STD::
+
+// ESTRUCUTRAS USADAS:
+/**
+ * struct pais SE USA PARA CREAR CADA PAIS, ACA SE GUARDA INFORMACION IMPORTANTE
+ * LA POSCIONES DE LOS NUMEROS EN LOS VECTORES CORRESPONDEN A LA FASE/ETAPA DEL PARTIDO (0: FASE DE GRUPOS, 1: OCTAVOS, 2: CUARTOS, 3, FINAL O SEMIFINAL)
+ */
+
 struct pais
 {
     pais *next;
@@ -20,51 +28,68 @@ struct pais
     bool octavosClas = false;
     bool cuartosClas = false;
     bool semifinalClas = false;
-    bool winner = false;
-    bool winnerT = false;
-    // COLOCAR LOS INT COMO VECTORES Y QUE LAS POSICIONES DEL VECTOR DEPENDE DE QUE TAN LEJOS LLEGÓ EL EQUIPO, ES DECIR:
-    // 0: FASE DE GRUPOS, 1: OCTAVOS, 2: CUARTOS, 3, FINAL O SEMIFINAL
-    // PARA NO GENERAR CONFUCIONES LA VARIABLE 'final_' ES PARA CONFIRMAR SI
-    // LOS EQUIPOS QUE NO PASAN SE LES PONE -1
+    bool winner = false;  // BOOL QUE INDICA SÍ GANÓ EL MUNDIAL
+    bool winnerT = false; // BOOL QUE INDICA SÍ GANÓ EL TERCER PUESTO
 };
+/**
+ * struct Team GUARDA LOS EQUIPOS POR GRUPOS SEGUN EL ARCHIVO DADO
+ */
 struct Team
 {
-    Team *next;
-    string group;
-    vector<pais *> posicionClasificados;
-    vector<string> countries;
-    vector<pais *> pais; // GUARDAMOS LOS APUNTADORE DE CADA PAIS QUE ESTAN EN countries, para así apuntar a su informacion en pais strcuture
+    Team *next;                          // PUNTERO DEL SIGUIENTE NODO PARA LA LISTA
+    string group;                        // NOMBRE DEL GRUPO
+    vector<pais *> posicionClasificados; // ESTE VECTOR GUARDA LOS PUNTEROS DE LOS PAISES ORDENADOS SEGUN SU PUNTAJE DE CLASIFICACION PARA ASÍ ACCEDER A ELLOS
+    vector<string> countries;            // ESTE VECTO GUARDA LOS NOMBRES DE LOS PAISES
+    vector<pais *> pais;                 // ESTE VECTOR GUARDA LOS APUNTADORE DE CADA PAIS QUE ESTAN EN countries, para así apuntar a su informacion en structure pais
 };
+/**
+ * struct octavosF GUARDA LOS EQUIPOS QUE CLASIFICARON LA FASE ANTERIOR (FASE DE GRUPOS)
+ */
 struct octavosF
 {
-    octavosF *next;
-    int grupo; // GRUPO 1, GRUPO 2 Y ASI
-    vector<pais *> clasificados;
+    octavosF *next;              //
+    int grupo;                   // GRUPO 1, GRUPO 2 Y ASI
+    vector<pais *> clasificados; // VECTOR QUE GUARDA LOS PUNTEROS DE LOS DOS PRIMEROS PAISES QUE ESTAN EN Team.posicionClasificados
 };
+/**
+ *struct cuartosF GUARDA LOS EQUIPOS QUE CLASIFICARON LA FASE ANTERIOR (OCTAVOSS)
+ */
 struct cuartosF
 {
     cuartosF *next;
-    int grupo; // GRUPO 1, GRUPO 2 Y ASI
-    vector<pais *> clasificados;
+    int grupo;                   // GRUPO 1, GRUPO 2 Y ASI
+    vector<pais *> clasificados; // VECTOR QUE GUARDA LOS PUNTEROS DE pais DE QUIENES CLASIFICARON, O SEA QUE EL BOOL SEA: octavosClas = true;
 };
+/**
+ * struct semifinal_ SE USAN PARA MANERJAR AQUELLOS PAISES QUE PASARON LOS CUARTOS DE FINAL.
+ * DE ACÁ PASAN 2 EQUIPO, A LOS CUALES SE LES PONE EN LA struc pais EL BOOL COMO semifinalClas = true PARA INDICAR QUE PASAN
+ * A LA FINAL, LOS OTROS DOS PAISES SEGUIRAN CON EL BOOL EN semifinalClas = false, Y ASI INDICANDO QUE SERÁN LOS PIASES
+ * QUE SE ENFRETARAN PARA EL TERCER PUESTO
+ */
 struct semifinal_
 {
     semifinal_ *next;
-    int grupo; // GRUPO 1, GRUPO 2 Y ASI
-    vector<pais *> clasificados;
+    int grupo;                   // GRUPO 1, GRUPO 2 Y ASI
+    vector<pais *> clasificados; // VECTOR QUE GUARDA LOS PUNTEROS DE pais DE QUIENES CLASIFICARON, O SEA QUE EL BOOL SEA: cuartosClas  = true;
 };
+/**
+ * struct finalP SE USA PARA GUARDAR LOS PIASES QUE SE ENFRENTARAN EN LA FINAL
+ */
 struct finalP
 {
     finalP *next;
-    vector<pais *> clasificados;
+    vector<pais *> clasificados; // VECTOR QUE GUARDA LOS PUNTEROS DE pais DE QUIENES CLASIFICARON semifinalClas = true;
 };
+/**
+ * ESTRCUTURA QUE GUARDA LOS ESTADIOS DONDE SE JUGARÁN LOS PARTIDOS
+ */
 struct Estadio
 {
     Estadio *next;
     string nombre;
 };
 
-// VARIABLES GLOBALES
+// VARIABLES GLOBALES Y CABEZERAS DE LAS LISTAS
 int nClasificados = 2;
 Team *head = nullptr;
 pais *headP = nullptr;
@@ -73,11 +98,10 @@ cuartosF *headC = nullptr;
 semifinal_ *headSF = nullptr;
 finalP *headFP = nullptr;
 Estadio *headEstadio = nullptr;
-// DEFINO LAS FUNCIONES
+// DEFINICION DE LAS FUNCIONES
 void createEstadio(string nombreEstadio);
 void iniciar();
 vector<string> split(string txt);
-void prueba();
 int nCaracteres(string str);
 vector<int> goles();
 bool read();
@@ -96,7 +120,10 @@ void mostrarTabla();
 void clasi();
 void menu();
 
-// FUNCIONES QUE USO UNA VEZ O VARIAS, PERO NO TAN IMPORTANTES
+// FUNCIONES QUE USO UNA VEZ O VARIAS, PERO NO TAN IMPORTANTES (nah, si lo son).
+/**
+ * FUNCION INICIA LOS VECTORES DE CADA PAIS PARA ASÍ NO GENERAR PROBLEMA CUANDO SE QUIERA UTILIZAR.
+ */
 void iniciar()
 {
 
@@ -114,6 +141,11 @@ void iniciar()
         current = current->next;
     } while (current != nullptr);
 }
+/**
+ * FUNCION QUE ME SEPARA EN PARTE UN string SEGUN UN FILTRO, EN ESTE CASO LA COMA (',').
+ * @param [in] txt string EL CUAL VA A SER SEPARADO.
+ * @return Vector de cada elemento separado.
+ */
 vector<string> split(string txt)
 {
     int posInit = 0;
@@ -131,33 +163,13 @@ vector<string> split(string txt)
 
     return results;
 }
-void prueba()
-{
-
-    Team *current = head;
-    vector<int> v;
-    int numeroAleatorio, golesA, golesB, a = 0;
-    do
-    {
-        cout << "----------------------------" << current->group << "----------------------------" << endl;
-        for (int i = 0; i < current->countries.size(); i++)
-        {
-            for (int j = 1; j < current->countries.size(); j++)
-            {
-                if (j + a >= current->countries.size())
-                {
-                    break;
-                }
-                cout << current->pais[i]->nombre << " vs " << current->pais[j + a]->nombre << endl;
-                numeroAleatorio = rand() % 3;
-            }
-
-            a += 1;
-        }
-        current = current->next;
-        a = 0;
-    } while (current != nullptr);
-}
+/**
+ * @brief Cantidad de letras de un string
+ * @param [in] str string al cual se le va a calcular la cantidad de letras.
+ * @return Numero entero de la cantidad de letras de un string.
+ *
+ *@paragraph FUNCIONES QUE ME RETORNA LA CANTIDAD DE LETRAS QUE TIENE UN string.
+ */
 int nCaracteres(string str)
 {
     // Convertir la cadena a wide string
@@ -165,6 +177,9 @@ int nCaracteres(string str)
     wstring wstr = converter.from_bytes(str);
     return wstr.size();
 }
+/**
+ * FUNCIONES QUE GENERA 2 NUMEROS ALEATORIOS, LOS CUALES INDICAN LOS GOLES DE LOS EQUIPO Y LO RETORNA EN UN VECTOR<INT>
+ */
 vector<int> goles()
 {
     vector<int> v;
@@ -172,11 +187,14 @@ vector<int> goles()
     v.push_back(rand() % 7);
     return v;
 }
+/**
+ * FUNCIONES QUE LEE UN ARCHIVO Y DE AHÍ CREA LOS EQUIPOS Y LOS ESTADIOS QUE SE USARÁN EN LA SIMULACION
+ */
 bool read()
 {
-    ifstream file;
-    string group;
-    string countries;
+    ifstream file;    //
+    string group;     //
+    string countries; //
     file.open("equipos.txt", ios::in);
     if (file.fail())
     {
@@ -205,6 +223,9 @@ bool read()
     iniciar();
     return true;
 }
+/**
+ *  @brief Calcula los puntos de cada país
+ */
 void calcularPuntos()
 {
     // GANADOS = 3pts
@@ -219,6 +240,10 @@ void calcularPuntos()
         current = current->next;
     } while (current != nullptr);
 }
+/**
+ * @brief Calcula la posicion de los paises segun su puntaje
+ * Ordena los piases de mayor a menor según el totalPuntos, y si se repiten se decide por la diferencia de goles
+ */
 void calcularPosicion()
 {
     /**
@@ -292,6 +317,11 @@ void calcularPosicion()
 
     } while (current != nullptr);
 }
+/**
+ * @brief Ordena a los paises según la diferencia de goles
+ * @param [in] s Vector de punteros de pais
+ * @param [out] s Vector de punteros de pais ordenado por diferencia de goles
+ */
 vector<pais *> orderByGolesDiferencia(vector<pais *> s)
 {
     pais *aux;
@@ -338,6 +368,9 @@ vector<pais *> orderByGolesDiferencia(vector<pais *> s)
 
     return s;
 }
+/**
+ * @brief Funcion que retorna un numero float aleatorio, entre el 0.01 y 1.0
+ */
 float floatRandom()
 {
     int numeroEntero = rand() % 100 + 1;
@@ -347,6 +380,11 @@ float floatRandom()
 }
 
 // SECION DE CREACION DE NODOS
+/**
+ * @brief Crea un nodo de tipo struct Team para así agregar a la lista
+ * @param [in] group nombre del grupo
+ * @param [in] countries vector de los nombres de los paises de ese grupo
+ */
 void create(Team *&head, string group, vector<string> countries)
 {
 
@@ -369,6 +407,10 @@ void create(Team *&head, string group, vector<string> countries)
         current->next = new_node;
     }
 }
+/**
+ * @brief Crea un nodo de tipo struct Pais para así agregar a la lista.
+ * Según los nombres que existan dentro del vector<string> countries de la estructura Team
+ */
 void createPais(Team *&head)
 {
     Team *current = head;
@@ -409,6 +451,10 @@ void createPais(Team *&head)
         current = current->next;
     } while (current != nullptr);
 }
+/**
+ * @brief Crea un nodo de tipo struct Estadio para así agregar a la lista
+ * @param [in] nombreEstadio Nombre del estadio
+ */
 void createEstadio(string nombreEstadio)
 {
     Estadio *new_node = new Estadio();
@@ -417,7 +463,6 @@ void createEstadio(string nombreEstadio)
 
     if (headEstadio == nullptr)
     {
-        cout << "SIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII" << endl;
         headEstadio = new_node;
         headEstadio->next = headEstadio;
     }
@@ -432,6 +477,12 @@ void createEstadio(string nombreEstadio)
         new_node->next = headEstadio;
     }
 }
+/**
+ * @brief Crea un nodo de tipo struct OctavosF.
+ * @param [in] grupo Numero de grupo de los paises.
+ * @param [in] countries Vector de punteros de tipo pais, que son aquellos paise que pasaron.
+ * Se crea en base a los paises que clasificaron en la fase de grupos.
+ */
 void createOctavos(int grupo, vector<pais *> countries)
 {
     octavosF *new_node = new octavosF();
@@ -453,6 +504,12 @@ void createOctavos(int grupo, vector<pais *> countries)
         current->next = new_node;
     }
 }
+/**
+ * @brief Crea un nodo de tipo struct cuartosF.
+ * @param [in] grupo Numero de grupo de los paises.
+ * @param [in] countries Vector de punteros de tipo pais, que son aquellos paise que pasaron.
+ * Se crea en base a los paises que clasificaron los Octavos.
+ */
 void createCuartos(int grupo, vector<pais *> countries)
 {
     cuartosF *new_node = new cuartosF();
@@ -474,6 +531,12 @@ void createCuartos(int grupo, vector<pais *> countries)
         current->next = new_node;
     }
 }
+/**
+ * @brief Crea un nodo de tipo struct semifinal_.
+ * @param [in] grupo Numero de grupo de los paises.
+ * @param [in] countries Vector de punteros de tipo pais, que son aquellos paise que pasaron.
+ * Se crea en base a los paises que clasificaron los cuartos. Tambien se usa para aquellos paises que se disputarán el tercer puesto.
+ */
 void createSemifinal(int grupo, vector<pais *> countries)
 {
     semifinal_ *new_node = new semifinal_();
@@ -495,6 +558,11 @@ void createSemifinal(int grupo, vector<pais *> countries)
         current->next = new_node;
     }
 }
+/**
+ * @brief Crea un nodo de tipo struct finalP.
+ * @param [in] countries Vector de punteros de tipo pais, que son aquellos paise que pasaron.
+ * Se crea en base a los paises que clasificaron la semifinal.
+ */
 void createFinal(vector<pais *> countries)
 {
     finalP *new_node = new finalP();
@@ -516,6 +584,11 @@ void createFinal(vector<pais *> countries)
     }
 }
 // SECCION DONDE CALCULA TODO DE MANERA ALEATORIA
+/**
+ * @brief Funcion para simular la fase de grupos de manera aleatoria.
+ * Sirve para simular todo la fase de grupos de todos los grupos según la lista de struct Team. Los posibles resultados son:
+ * PIERDE - GANA - EMPATE.
+ */
 void faseGrupos(Team *&head)
 {
     Team *current = head;
@@ -599,6 +672,11 @@ void faseGrupos(Team *&head)
     calcularPuntos();
     calcularPosicion();
 }
+/**
+ * @brief Funcion para simular los octavos de final de manera aleatoria.
+ * Sirve para simular los octavos de final de todos los grupos según la lista de struct Octavos. Los posibles resultados son:
+ * PIERDE - GANA.
+ */
 void octavos()
 {
     vector<pais *> paisesOctavos;
@@ -672,6 +750,11 @@ void octavos()
         current = current->next;
     } while (current != nullptr);
 }
+/**
+ * @brief Funcion para simular los cuartos de final de manera aleatoria.
+ * Sirve para simular los cuartos de final de todos los grupos según la lista de struct Octavos. Los posibles resultados son:
+ * PIERDE - GANA.
+ */
 void cuartos()
 {
     vector<pais *> paisesCuartos;
@@ -747,6 +830,12 @@ void cuartos()
         // cout << "///////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
     } while (current != nullptr);
 }
+/**
+ * @brief Funcion para simular la semifinal de final de manera aleatoria.
+ * Sirve para simular la semi final de todos los grupos según la lista de struct Cuartos. Los posibles resultados son:
+ * PIERDE - GANA.
+ * Tambien de acá salen los dos paises que se disputarán el tercer puesto.
+ */
 void semifinal()
 {
     vector<pais *> paisesSemifinal;
@@ -820,6 +909,11 @@ void semifinal()
         // cout << "///////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
     } while (current != nullptr);
 }
+/**
+ * @brief Funcion para simular la final.
+ * Sirve para simular los cuartos de final de todos los grupos según la lista de struct semifinal. Los posibles resultados son:
+ * PIERDE - GANA.
+ */
 void partidoFinal()
 {
     vector<pais *> paisesFinal;
@@ -879,6 +973,11 @@ void partidoFinal()
     current->clasificados[1]->goleFavor.push_back(v[1]);
     // cout << "///////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
 }
+/**
+ * @brief Funcion para simular el partido para el tercer puesto de manera aleatoria.
+ * Sirve para simular el ultimo partido para el tercer puesto, según los paises en struct semiFinal_ que no hayan pasado
+ * a ala final.
+ */
 void tercerPuesto()
 {
     vector<pais *> paisesFinal;
@@ -938,6 +1037,11 @@ void tercerPuesto()
     paisesFinal[1]->goleFavor.push_back(v[1]);
 }
 // EL USUARIOS INGRESA LOS RESULTADOS
+/**
+ * @brief Funcion para simular la fase de grupos donde el usuario ingresa los resultado del enfrentamiento.
+ * Sirve para simular toda la fase de grupos, segun los datos que ingrese el usuario, de todos los grupos según la lista de struct Team. Los posibles resultados son:
+ * PIERDE - GANA - EMPATE.
+ */
 void faseGruposIn()
 {
     Team *current = head;
@@ -1050,6 +1154,11 @@ void faseGruposIn()
     calcularPuntos();
     calcularPosicion();
 }
+/**
+ * @brief Funcion para simular los octavos de final donde el usuario ingresa los resultado del enfrentamiento.
+ * Sirve para simular los octavos de final, segun los datos que ingrese el usuario, de todos los grupos según la lista de struct Octavos. Los posibles resultados son:
+ * PIERDE - GANA.
+ */
 void octavosIn()
 {
     vector<pais *> paisesOctavos;
@@ -1222,6 +1331,11 @@ void octavosIn()
         current = current->next;
     } while (current != nullptr);
 }
+/**
+ * @brief Funcion para simular los cuartos de final donde el usuario ingresa los resultado del enfrentamiento.
+ * Sirve para simular los cuartos de final, segun los datos que ingrese el usuario, de todos los grupos según la lista de struct Octavos. Los posibles resultados son:
+ * PIERDE - GANA.
+ */
 void cuartosIn()
 {
     vector<pais *> paisesCuartos;
@@ -1395,6 +1509,12 @@ void cuartosIn()
         current = current->next;
     } while (current != nullptr);
 }
+/**
+ * @brief Funcion para simular la semifinal de final donde el usuario ingresa los resultado del enfrentamiento.
+ * Sirve para simular la semi final, segun los datos que ingrese el usuario, de todos los grupos según la lista de struct Cuartos. Los posibles resultados son:
+ * PIERDE - GANA.
+ * Tambien de acá salen los dos paises que se disputarán el tercer puesto.
+ */
 void semifinalIn()
 {
     vector<pais *> paisesSemifinal;
@@ -1570,6 +1690,11 @@ void semifinalIn()
         current = current->next;
     } while (current != nullptr);
 }
+/**
+ * @brief Funcion para simular la final donde el usuario ingresa los resultado del enfrentamiento..
+ * Sirve para simular los cuartos de final, segun los datos que ingrese el usuario, de todos los grupos según la lista de struct semifinal. Los posibles resultados son:
+ * PIERDE - GANA.
+ */
 void partidoFinalIn()
 {
     vector<pais *> paisesFinal;
@@ -1733,6 +1858,11 @@ void partidoFinalIn()
         current = current->next;
     } while (current != nullptr);
 }
+/**
+ * @brief Funcion para simular el partido para el tercer puesto donde el usuario ingresa los resultado del enfrentamiento.
+ * Sirve para simular el ultimo partido para el tercer puesto, en base a los datos que ingrese el usuario, según los paises en struct semiFinal_ que no hayan pasado
+ * a ala final.
+ */
 void tercerPuestoIn()
 {
     vector<pais *> paisesFinal;
@@ -2721,6 +2851,7 @@ void mostrarTabla()
             }
             cout << "|    " << current->posicionClasificados[i]->totalPartidos[0] << "    | " << current->posicionClasificados[i]->ganados[0] << " | " << current->posicionClasificados[i]->empatados[0] << " | " << current->posicionClasificados[i]->perdidos[0] << " |   " << current->posicionClasificados[i]->totalPuntos[0] << "    |";
             // 3
+
             if (current->posicionClasificados[i]->goleFavor[0] >= 10)
             {
                 cout << " " << current->posicionClasificados[i]->goleFavor[0] << " |";
@@ -2729,7 +2860,6 @@ void mostrarTabla()
             {
                 cout << " " << current->posicionClasificados[i]->goleFavor[0] << "  |";
             }
-
             if (current->posicionClasificados[i]->golesContra[0] >= 10)
             {
                 cout << " " << current->posicionClasificados[i]->golesContra[0] << " |";
@@ -2738,14 +2868,22 @@ void mostrarTabla()
             {
                 cout << " " << current->posicionClasificados[i]->golesContra[0] << "  |";
             }
-
+            // GD
             if (current->posicionClasificados[i]->golesDiferencia[0] >= 10)
+            {
+                cout << " " << current->posicionClasificados[i]->golesDiferencia[0] << " |" << endl;
+            }
+            else if (current->posicionClasificados[i]->golesDiferencia[0] <= -10)
+            {
+                cout << "" << current->posicionClasificados[i]->golesDiferencia[0] << " |" << endl;
+            }
+            else if (current->posicionClasificados[i]->golesDiferencia[0] < 0)
             {
                 cout << " " << current->posicionClasificados[i]->golesDiferencia[0] << " |" << endl;
             }
             else
             {
-                cout << " " << current->posicionClasificados[i]->golesDiferencia[0] << "  |" << endl;
+                cout << "  " << current->posicionClasificados[i]->golesDiferencia[0] << " |" << endl;
             }
         }
         current = current->next;
