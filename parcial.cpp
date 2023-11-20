@@ -3106,6 +3106,13 @@ void menu()
 }
 int main()
 {
+    int a;
+    do{
     srand(time(0));
     menu();
+    
+    cout << "OTRA VEZ? " << endl;
+    cin >> a;
+    }while (a = 1);
+    
 }
